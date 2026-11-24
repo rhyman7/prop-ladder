@@ -21,10 +21,10 @@ Standalone site, rhyman7.github.io/prop-ladder (GitHub Pages from `docs/`):
 
 ## How the true probability is made
 
-1. **Anchor:** SGO's `fairOdds` at `fairOverUnder` — the free plan's books with
-   the vig removed, median across books (matches our own simple vig removal to
-   ~0.3 points; `coverage/fairodds_report.md`). No `fairOdds`: our own median
-   simple vig removal over books quoting both sides at one line.
+1. **Anchor:** the line the most books quote on both sides (ties: nearest 50%);
+   each book's simple vig removal, median. A one-book anchor is flagged on the
+   pages. SGO's own `fairOdds` is NOT used: where books' main lines differ it can
+   be far off (Nov 24: 33.6% at 275.5 pass yds with DK at 50% on 270.5).
    `SOURCE = "consensus"`; switch to Pinnacle's no-vig line if a paid key ever
    carries it.
 2. **Curve:** a negative binomial (or Poisson) per stat, mean set so it matches

@@ -133,7 +133,7 @@
     const vs = game ? (game.away.name + ' at ' + game.home.name) : '';
     $('facts').innerHTML = `
       <div class="card fact"><span class="lbl">Anchor</span><span class="big">Over ${a.l} · ${PL.pct(a.p)}</span>
-        <span class="small">Fair ${PL.fmtOdds(a.fair)}, ${a.how === 'sgo' ? 'consensus' : 'our vig removal'} of ${a.n} book${a.n === 1 ? '' : 's'}, vig removed</span></div>
+        <span class="small">Fair ${PL.fmtOdds(a.fair)} · ${a.n >= 2 ? 'median of ' + a.n + ' books quoting both sides, vig removed' : 'only 1 book quotes both sides: weak anchor'}</span></div>
       <div class="card fact"><span class="lbl">Source</span><span><span class="tag dark">${data.source === 'pinnacle' ? 'Pinnacle' : 'Consensus'}</span> <span class="tag">${PL.esc(vs)}</span></span>
         <span class="small">${PL.esc(curveTxt)} · ${PL.when(prop.start)} ET</span></div>
       <div class="card fact"><span class="lbl">Best bet on this ladder</span>

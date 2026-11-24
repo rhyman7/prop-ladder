@@ -108,7 +108,7 @@
         <td class="l">${PL.esc(bet)}</td><td class="l">${x.bk === 'dk' ? 'DraftKings' : 'FanDuel'}</td>
         <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
         <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
-        <td class="l"><span class="tag${x.r.a ? ' dark' : ''}">${x.r.a ? 'Anchor' : 'Curve'}</span></td>
+        <td class="l"><span class="tag${x.r.a ? ' dark' : ''}">${x.r.a ? 'Anchor' : 'Curve'}</span>${x.p.anchor.n < 2 ? ' <span class="tag">1 book</span>' : ''}</td>
         <td class="m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) + ' · ' : ''}${PL.when(x.p.start)}</td></tr>`;
     }).join('');
   }

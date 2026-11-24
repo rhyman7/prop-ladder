@@ -3,9 +3,7 @@
 1. Pull upcoming events from SportsGameOdds (SGO) for NFL, NCAAF, NBA, NCAAB,
    with alternate lines. One SGO object per event; caps per league below.
 2. For each player over/under prop, find the TRUE probability at an anchor line:
-   SGO's fairOdds (the books' consensus with the vig removed) at fairOverUnder,
-   or, when SGO gives none, our own median vig removal over books quoting both
-   sides at one line (the two agree to ~0.3 points; coverage/fairodds_report.md).
+   the line the most books quote on both sides, each book's vig removed, median.
 3. Fit the stat's curve to that anchor (negative binomial, spread set by an
    assumed coefficient of variation per stat, CURVES below) and read the true
    probability of every rung DraftKings or FanDuel offers. Stats without a
@@ -185,24 +183,20 @@ def team_info(t):
 
 
 def anchor(o, oq_all, uq_all):
-    """(line, p_over, n_books, how). SGO fair first, else our median vig removal."""
-    if o.get("fairOddsAvailable") and o.get("fairOdds") and o.get("fairOverUnder") is not None:
-        fl = float(o["fairOverUnder"])
-        n = sum(1 for b in oq_all if fl in oq_all[b] and fl in uq_all.get(b, {}))
-        return fl, imp(o["fairOdds"]), n, "sgo"
-    best = None
+    """(line, p_over, n_books, how): the line the most books quote on BOTH sides
+    (ties: the one nearest 50%), each book's simple vig removal, median.
+    SGO's own fairOdds is not used: when books' main lines differ it can be far
+    off (e.g. 33.6% at 275.5 pass yds with DK at 50% on 270.5)."""
     lines = {}
     for b in oq_all:
         for ln in oq_all[b]:
             if ln in uq_all.get(b, {}):
                 po, pu = imp(oq_all[b][ln]), imp(uq_all[b][ln])
                 lines.setdefault(ln, []).append(po / (po + pu))
-    for ln, ps in lines.items():
-        if len(ps) >= 2 and (best is None or len(ps) > len(best[1])):
-            best = (ln, ps)
-    if best:
-        return best[0], st.median(best[1]), len(best[1]), "ours"
-    return None
+    if not lines:
+        return None
+    ln, ps = max(lines.items(), key=lambda kv: (len(kv[1]), -abs(st.median(kv[1]) - 0.5)))
+    return ln, st.median(ps), len(ps), "consensus" if len(ps) >= 2 else "one book"
 
 
 def two_sided_points(o, u):
@@ -225,7 +219,7 @@ def two_sided_points(o, u):
 
 def fit_cv(samples, default):
     """Pick the CV (or Poisson) that best matches the two-sided consensus rungs."""
-    grid = [None] + [round(0.12 + 0.03 * i, 2) for i in range(30)]
+    grid = [None] + [round(0.12 + 0.03 * i, 2) for i in range(40)]
     best, best_err = default, None
     for cv in grid:
         err = 0.0
