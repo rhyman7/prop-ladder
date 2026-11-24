@@ -1,0 +1,88 @@
+{
+ "teams": {
+  "home": {
+   "teamID": "LOS_ANGELES_RAMS_NFL",
+   "names": {
+    "long": "Los Angeles Rams",
+    "medium": "Rams",
+    "short": "LA",
+    "location": "Los Angeles"
+   },
+   "colors": {
+    "primary": "#012C61",
+    "secondary": "#474F57",
+    "primaryContrast": "#FFFFFF",
+    "secondaryContrast": "#000000"
+   },
+   "statEntityID": "home"
+  },
+  "away": {
+   "teamID": "GREEN_BAY_PACKERS_NFL",
+   "names": {
+    "long": "Green Bay Packers",
+    "medium": "Packers",
+    "short": "GB",
+    "location": "Green Bay"
+   },
+   "colors": {
+    "primary": "#203731",
+    "secondary": "#FFB612",
+    "primaryContrast": "#FFB612",
+    "secondaryContrast": "#203731"
+   },
+   "statEntityID": "away"
+  }
+ },
+ "status": {
+  "started": false,
+  "completed": false,
+  "cancelled": false,
+  "ended": false,
+  "live": false,
+  "delayed": false,
+  "currentPeriodID": "",
+  "previousPeriodID": "",
+  "displayShort": "",
+  "displayLong": "Upcoming",
+  "inBreak": false,
+  "startsAt": "2026-11-26T01:00:00.000Z",
+  "previousStartsAt": [],
+  "hardStart": true,
+  "periods": {
+   "started": [],
+   "ended": []
+  },
+  "oddsPresent": true,
+  "oddsAvailable": true,
+  "finalized": false
+ },
+ "players_first3": {
+  "BLAKE_GRUPE_1_NFL": {
+   "playerID": "BLAKE_GRUPE_1_NFL",
+   "name": "Blake Grupe",
+   "firstName": "Blake",
+   "lastName": "Grupe",
+   "nickname": "B.Grupe",
+   "teamID": "LOS_ANGELES_RAMS_NFL",
+   "status": "ir",
+   "statusDetails": "I.L. - Knee - ACL"
+  },
+  "BO_MELTON_1_NFL": {
+   "playerID": "BO_MELTON_1_NFL",
+   "name": "Bo Melton",
+   "firstName": "Bo",
+   "lastName": "Melton",
+   "nickname": "B.Melton",
+   "teamID": "GREEN_BAY_PACKERS_NFL",
+   "status": "questionable",
+   "statusDetails": "Thigh - Questionable for Week 12 at L.A. Rams"
+  },
+  "BRANDON_CISSE_1_NFL": {
+   "playerID": "BRANDON_CISSE_1_NFL",
+   "name": "Brandon Cisse",
+   "firstName": "Brandon",
+   "lastName": "Cisse",
+   "teamID": "GREEN_BAY_PACKERS_NFL"
+  }
+ }
+}
