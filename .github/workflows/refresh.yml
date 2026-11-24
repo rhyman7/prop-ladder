@@ -1,0 +1,39 @@
+name: Refresh prices
+
+# Pulls upcoming NFL, NCAAF, NBA and NCAAB props from SportsGameOdds and
+# rebuilds docs/data.json. Cost: about 1 SGO object per event; the caps in
+# scripts/build.py (16 + 25 + 15 + 20) keep one run at 76 objects or fewer.
+# Free plan: 2,500 objects a month. NO SCHEDULE YET: Ryan picks the frequency.
+#   once a day   ~ 2,300 a month (most of the free allowance)
+#   every 2 days ~ 1,150 a month
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "17 15 * * *"   # once a day, 10:17 AM ET
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build data.json
+        env:
+          SGO_API_KEY: ${{ secrets.SGO_API_KEY }}
+        run: python scripts/build.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add docs/data.json coverage/meta_sample.json
+          git commit -m "Refresh prices" || echo "nothing to commit"
+          git pull --rebase -q && git push

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All +EV plays · Prop Ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>All +EV plays</h1>
+      <p class="sub">Every rung where the true probability beats the book's implied probability, best edge first.</p>
+    </div>
+    <div class="hdr-right">
+      <nav aria-label="Pages"><a href="index.html">Prop Ladder</a><a href="plays.html" aria-current="page">All +EV plays</a></nav>
+      <p class="stamp" id="stamp">Loading prices…</p>
+    </div>
+  </header>
+
+  <section class="card controls" aria-label="Filters">
+    <div class="field"><span class="lbl">Sport</span><div class="pills" id="sports"></div></div>
+    <div class="field"><span class="lbl">Book</span><div class="pills" id="books"></div></div>
+    <div class="field"><span class="lbl">Minimum edge</span><div class="pills" id="mins"></div></div>
+    <div class="field"><span class="lbl">Rungs</span><div class="pills" id="basis"></div><span class="hint">Anchor = the line the true probability comes from</span></div>
+    <div class="field"><span class="lbl">Profit boost</span><div class="pills" id="boosts"></div></div>
+  </section>
+
+  <div id="msg"></div>
+  <p class="b" style="margin:0;font-size:15px" id="count"></p>
+
+  <section class="card tbl" aria-label="Plays">
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th scope="col">Edge</th><th scope="col" class="l">Player</th><th scope="col" class="l">Bet</th><th scope="col" class="l">Book</th>
+          <th scope="col">Price</th><th scope="col">Book implied</th><th scope="col">True prob</th><th scope="col">EV / $10</th>
+          <th scope="col" class="l">Basis</th><th scope="col">Game</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="empty" hidden>No rung clears this filter. Lower the minimum edge or add a boost.</p>
+  </section>
+
+  <footer class="legend">
+    <span>Edge = true prob − book implied (after the boost). Click a player for the full ladder.</span>
+    <span>Curve rungs depend on the stat's fitted spread: untested, treat as estimates. Anchor rungs are the consensus number itself.</span>
+  </footer>
+</div>
+<script src="common.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  let data;
+  try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
+  $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'pinnacle' ? ' · Pinnacle' : ' · consensus');
+  const S = { sport: 'All', book: 'Both', min: 0, basis: 'All', boost: 0 };
+  const games = new Map(data.games.map((g) => [g.id, g]));
+  const MAX_ROWS = 300;
+
+  function pills(el, key, items) {
+    el.innerHTML = '';
+    for (const [value, label] of items) {
+      const b = document.createElement('button');
+      b.className = 'pill'; b.type = 'button'; b.textContent = label;
+      b.setAttribute('aria-pressed', String(S[key] === value));
+      b.onclick = () => { S[key] = value; render(); };
+      el.appendChild(b);
+    }
+  }
+
+  function render() {
+    pills($('sports'), 'sport', [['All', 'All'], ...PL.SPORTS.map((s) => [s, s])]);
+    pills($('books'), 'book', [['Both', 'Both'], ['dk', 'DK'], ['fd', 'FD']]);
+    pills($('mins'), 'min', [[0, 'Any'], [1, '1%+'], [2, '2%+'], [3, '3%+']]);
+    pills($('basis'), 'basis', [['All', 'All'], ['anchor', 'Anchor only']]);
+    pills($('boosts'), 'boost', PL.BOOSTS.map((b) => [b, b ? b + '%' : 'None']));
+    const B = S.boost / 100, out = [];
+    for (const p of data.props) {
+      if (S.sport !== 'All' && p.sport !== S.sport) continue;
+      for (const r of p.rungs) {
+        if (S.basis === 'anchor' && !r.a) continue;
+        for (const side of ['o', 'u']) {
+          const { pW, pL } = PL.sideProbs(r, side);
+          for (const bk of ['dk', 'fd']) {
+            if (S.book !== 'Both' && S.book !== bk) continue;
+            const odds = r[bk + side];
+            if (odds == null) continue;
+            const x = PL.price(odds, pW, pL, B);
+            if (x.edge > S.min / 100 && x.edge > 0) out.push({ p, r, side, bk, odds, ...x });
+          }
+        }
+      }
+    }
+    out.sort((a, b) => b.edge - a.edge);
+    $('count').textContent = out.length + (out.length === 1 ? ' play' : ' plays') + (S.boost ? ` with a ${S.boost}% boost` : '') + (out.length > MAX_ROWS ? ` (showing the top ${MAX_ROWS})` : '');
+    $('empty').hidden = out.length > 0;
+    $('rows').innerHTML = out.slice(0, MAX_ROWS).map((x) => {
+      const g = games.get(x.p.game);
+      const link = 'index.html#' + new URLSearchParams({ sport: x.p.sport, team: x.p.teamName || '', pid: x.p.pid, stat: x.p.stat, side: x.side, boost: S.boost }).toString();
+      const bet = (x.side === 'o' ? 'Over ' : 'Under ') + x.r.l + ' ' + x.p.statLabel.toLowerCase() + ' (' + PL.rungLabel(x.r.l, x.side) + ')';
+      return `<tr><td><span class="chip">${PL.signedPct(x.edge)}</span></td>
+        <td class="l"><a class="b" style="color:#111827" href="${link}">${PL.esc(x.p.player)}</a> <span class="m">${PL.esc(x.p.team || '')}</span></td>
+        <td class="l">${PL.esc(bet)}</td><td class="l">${x.bk === 'dk' ? 'DraftKings' : 'FanDuel'}</td>
+        <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
+        <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
+        <td class="l"><span class="tag${x.r.a ? ' dark' : ''}">${x.r.a ? 'Anchor' : 'Curve'}</span></td>
+        <td class="m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) + ' · ' : ''}${PL.when(x.p.start)}</td></tr>`;
+    }).join('');
+  }
+  render();
+})();
+</script>
+</body>
+</html>

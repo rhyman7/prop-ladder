@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prop Ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Prop Ladder</h1>
+      <p class="sub">True probability for every rung, against DraftKings and FanDuel.</p>
+    </div>
+    <div class="hdr-right">
+      <nav aria-label="Pages"><a href="index.html" aria-current="page">Prop Ladder</a><a href="plays.html">All +EV plays</a></nav>
+      <p class="stamp" id="stamp">Loading prices…</p>
+    </div>
+  </header>
+
+  <section class="card controls" aria-label="Choose a prop">
+    <div class="field"><span class="lbl">Sport</span><div class="pills" id="sports"></div></div>
+    <div class="field grow"><label class="lbl" for="team">Team</label><select id="team"></select><span class="hint">Teams with props posted</span></div>
+    <div class="field grow"><label class="lbl" for="player">Player</label><select id="player"></select></div>
+    <div class="field grow"><label class="lbl" for="stat">Stat</label><select id="stat"></select></div>
+    <div class="field"><span class="lbl">Side</span><div class="pills" id="sides"></div></div>
+    <div class="field"><span class="lbl">Profit boost</span><div class="pills" id="boosts"></div></div>
+  </section>
+
+  <div id="msg"></div>
+  <section class="facts" id="facts" aria-label="Where the true probability comes from"></section>
+
+  <section class="card tbl" aria-label="Ladder">
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th scope="col" class="l">Rung</th><th scope="col">True prob</th><th scope="col" class="sep">Fair odds</th>
+          <th scope="col">DK price</th><th scope="col">DK implied</th><th scope="col">DK edge</th><th scope="col" class="sep">DK EV / $10</th>
+          <th scope="col">FD price</th><th scope="col">FD implied</th><th scope="col">FD edge</th><th scope="col">FD EV / $10</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="legend">
+    <span><span class="sw" style="background:#DBEAFE;border:1px solid #1D4ED8"></span>+EV at that book</span>
+    <span><span class="sw" style="background:#FFEDD5;border:1px solid #C2410C"></span>Edge worse than −3%</span>
+    <span>Edge = true prob − book implied (after the boost). Shaded row = anchor line. — = not offered.</span>
+    <span>Rungs other than the anchor come from the stat's curve: untested, treat as estimates.</span>
+  </footer>
+</div>
+<script src="common.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  let data;
+  try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
+  $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'pinnacle' ? ' · Pinnacle' : ' · consensus');
+  const props = data.props;
+  const h = new URLSearchParams(location.hash.slice(1));
+  const S = { sport: h.get('sport'), team: h.get('team'), pid: h.get('pid'), stat: h.get('stat'), side: h.get('side') || 'o', boost: +(h.get('boost') || 0) };
+
+  const uniq = (xs) => [...new Set(xs)];
+  function pills(el, items, cur, onPick) {
+    el.innerHTML = '';
+    for (const it of items) {
+      const b = document.createElement('button');
+      b.className = 'pill'; b.type = 'button'; b.textContent = it.label;
+      b.setAttribute('aria-pressed', String(it.value === cur)); b.disabled = !!it.disabled;
+      b.onclick = () => onPick(it.value);
+      el.appendChild(b);
+    }
+  }
+  function fill(sel, opts, cur) {
+    sel.innerHTML = opts.map((o) => `<option value="${PL.esc(o.value)}"${o.value === cur ? ' selected' : ''}>${PL.esc(o.label)}</option>`).join('');
+  }
+
+  function render() {
+    const sportsHave = uniq(props.map((p) => p.sport));
+    if (!sportsHave.includes(S.sport)) S.sport = PL.SPORTS.find((s) => sportsHave.includes(s));
+    pills($('sports'), PL.SPORTS.map((s) => ({ label: s, value: s, disabled: !sportsHave.includes(s) })), S.sport, (v) => { S.sport = v; S.team = S.pid = S.stat = null; render(); });
+
+    const inSport = props.filter((p) => p.sport === S.sport);
+    const teams = uniq(inSport.map((p) => p.teamName)).filter(Boolean).sort();
+    if (!teams.includes(S.team)) S.team = teams[0];
+    fill($('team'), teams.map((t) => ({ value: t, label: t })), S.team);
+
+    const inTeam = inSport.filter((p) => p.teamName === S.team);
+    const players = [...new Map(inTeam.map((p) => [p.pid, p.player])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    if (!players.some(([id]) => id === S.pid)) S.pid = players[0] && players[0][0];
+    fill($('player'), players.map(([id, n]) => ({ value: id, label: n })), S.pid);
+
+    const forPlayer = inTeam.filter((p) => p.pid === S.pid);
+    if (!forPlayer.some((p) => p.stat === S.stat)) S.stat = forPlayer[0] && forPlayer[0].stat;
+    fill($('stat'), forPlayer.map((p) => ({ value: p.stat, label: p.statLabel })), S.stat);
+
+    pills($('sides'), [{ label: 'Over', value: 'o' }, { label: 'Under', value: 'u' }], S.side, (v) => { S.side = v; render(); });
+    pills($('boosts'), PL.BOOSTS.map((b) => ({ label: b ? b + '%' : 'None', value: b })), S.boost, (v) => { S.boost = v; render(); });
+
+    const prop = forPlayer.find((p) => p.stat === S.stat);
+    history.replaceState(null, '', '#' + new URLSearchParams({ sport: S.sport || '', team: S.team || '', pid: S.pid || '', stat: S.stat || '', side: S.side, boost: S.boost }).toString());
+    if (!prop) { $('facts').innerHTML = ''; $('rows').innerHTML = '<tr><td class="l" colspan="11">No props for this pick.</td></tr>'; return; }
+    table(prop);
+  }
+
+  function table(prop) {
+    const B = S.boost / 100, side = S.side, a = prop.anchor;
+    let best = null;
+    const rows = prop.rungs.filter((r) => r['dk' + side] != null || r['fd' + side] != null).map((r) => {
+      const { pW, pL } = PL.sideProbs(r, side);
+      const pTrue = pW / Math.max(pW + pL, 1e-9);
+      const cells = ['dk', 'fd'].map((bk) => {
+        const odds = r[bk + side];
+        const sep = bk === 'dk' ? ' sep' : '';
+        if (odds == null) return `<td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na${sep}">—</td>`;
+        const x = PL.price(odds, pW, pL, B);
+        if (x.ev > 0 && (!best || x.ev > best.ev)) best = { ...x, odds, bk, label: PL.rungLabel(r.l, side) };
+        const cls = x.edge > 0 ? 'plus' : x.edge < -0.03 ? 'minus' : '';
+        return `<td class="b">${PL.fmtOdds(odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="${cls}">${PL.signedPct(x.edge)}</td><td class="${cls}${sep}">${PL.money(x.ev)}</td>`;
+      });
+      return `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m sep">${PL.fair(pTrue)}</td>${cells[0]}${cells[1]}</tr>`;
+    });
+    $('rows').innerHTML = rows.join('') || '<tr><td class="l" colspan="11">Neither book offers this side.</td></tr>';
+    const c = data.curves[prop.stat];
+    const curveTxt = !prop.curve ? 'No curve for this stat: anchor line only'
+      : c && c.fitted ? `Other rungs from the ${prop.statLabel.toLowerCase()} curve, spread fitted to ${c.points} two-sided rungs in today's market`
+      : `Other rungs from the ${prop.statLabel.toLowerCase()} curve, assumed spread (too few rungs to fit)`;
+    const game = data.games.find((g) => g.id === prop.game);
+    const vs = game ? (game.away.name + ' at ' + game.home.name) : '';
+    $('facts').innerHTML = `
+      <div class="card fact"><span class="lbl">Anchor</span><span class="big">Over ${a.l} · ${PL.pct(a.p)}</span>
+        <span class="small">Fair ${PL.fmtOdds(a.fair)}, ${a.how === 'sgo' ? 'consensus' : 'our vig removal'} of ${a.n} book${a.n === 1 ? '' : 's'}, vig removed</span></div>
+      <div class="card fact"><span class="lbl">Source</span><span><span class="tag dark">${data.source === 'pinnacle' ? 'Pinnacle' : 'Consensus'}</span> <span class="tag">${PL.esc(vs)}</span></span>
+        <span class="small">${PL.esc(curveTxt)} · ${PL.when(prop.start)} ET</span></div>
+      <div class="card fact"><span class="lbl">Best bet on this ladder</span>
+        <span class="big ${best ? 'good' : ''}">${best ? best.label + ' at ' + (best.bk === 'dk' ? 'DraftKings' : 'FanDuel') + ' ' + PL.fmtOdds(best.odds) : 'No +EV rung'}</span>
+        <span class="small">${best ? 'Edge ' + PL.signedPct(best.edge) + ', EV ' + PL.money(best.ev) + ' per $10' + (S.boost ? ' with the boost' : '') : 'Try the other side or a profit boost'}</span></div>`;
+  }
+
+  $('team').onchange = (e) => { S.team = e.target.value; S.pid = S.stat = null; render(); };
+  $('player').onchange = (e) => { S.pid = e.target.value; S.stat = null; render(); };
+  $('stat').onchange = (e) => { S.stat = e.target.value; render(); };
+  render();
+})();
+</script>
+</body>
+</html>

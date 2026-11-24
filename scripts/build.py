@@ -1,0 +1,369 @@
+"""Build docs/data.json for the Prop Ladder pages.
+
+1. Pull upcoming events from SportsGameOdds (SGO) for NFL, NCAAF, NBA, NCAAB,
+   with alternate lines. One SGO object per event; caps per league below.
+2. For each player over/under prop, find the TRUE probability at an anchor line:
+   SGO's fairOdds (the books' consensus with the vig removed) at fairOverUnder,
+   or, when SGO gives none, our own median vig removal over books quoting both
+   sides at one line (the two agree to ~0.3 points; coverage/fairodds_report.md).
+3. Fit the stat's curve to that anchor (negative binomial, spread set by an
+   assumed coefficient of variation per stat, CURVES below) and read the true
+   probability of every rung DraftKings or FanDuel offers. Stats without a
+   curve keep only rungs at the anchor line.
+4. Write the DK/FD price for every rung and side. The pages do the edge, EV and
+   boost math in the browser.
+
+Key: SGO_API_KEY. Writes docs/data.json and coverage/meta_sample.json.
+"""
+import json
+import math
+import os
+import statistics as st
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timedelta, timezone
+
+BASE = "https://api.sportsgameodds.com/v2"
+KEY = os.environ.get("SGO_API_KEY", "")
+ROOT = os.path.join(os.path.dirname(__file__), "..")
+SOURCE = "consensus"  # "pinnacle" once a paid key carries it
+
+# (max events per run, days ahead). About 1 SGO object per event.
+CAPS = {
+    "NFL": (int(os.environ.get("CAP_NFL", 16)), 4),
+    "NCAAF": (int(os.environ.get("CAP_NCAAF", 25)), 3),
+    "NBA": (int(os.environ.get("CAP_NBA", 15)), 2),
+    "NCAAB": (int(os.environ.get("CAP_NCAAB", 20)), 2),
+}
+SPORT_LABEL = {"NFL": "NFL", "NCAAF": "CFB", "NBA": "NBA", "NCAAB": "NCAAB"}
+BOOKS = {"draftkings": "dk", "fanduel": "fd"}
+TEAM_ENTITIES = {"home", "away", "all"}
+
+# Assumed coefficient of variation (sd / mean) per stat. STARTING VALUES, NOT
+# FITTED OR TESTED: rungs far from the anchor depend on them. None = Poisson.
+CURVES = {
+    # basketball
+    "points": 0.30, "rebounds": 0.42, "assists": 0.48, "threePointersMade": None,
+    "points+rebounds": 0.27, "points+assists": 0.27, "rebounds+assists": 0.36,
+    "points+rebounds+assists": 0.24, "steals": None, "blocks": None, "blocks+steals": None,
+    "turnovers": None,
+    # football
+    "passing_yards": 0.27, "rushing_yards": 0.50, "receiving_yards": 0.62,
+    "rushing+receiving_yards": 0.45, "passing+rushing_yards": 0.26,
+    "receiving_receptions": 0.45, "rushing_attempts": 0.33, "passing_attempts": 0.18,
+    "passing_completions": 0.20, "passing_touchdowns": None, "passing_interceptions": None,
+    "touchdowns": None, "defense_sacks": None, "defense_combinedTackles": 0.45,
+    "defense_soloTackles": 0.50, "fieldGoals_made": None,
+}
+STAT_LABEL = {
+    "points": "Points", "rebounds": "Rebounds", "assists": "Assists", "threePointersMade": "Threes made",
+    "points+rebounds": "Points + Rebounds", "points+assists": "Points + Assists",
+    "rebounds+assists": "Rebounds + Assists", "points+rebounds+assists": "Pts + Reb + Ast",
+    "steals": "Steals", "blocks": "Blocks", "blocks+steals": "Blocks + Steals", "turnovers": "Turnovers",
+    "passing_yards": "Passing yards", "rushing_yards": "Rushing yards", "receiving_yards": "Receiving yards",
+    "rushing+receiving_yards": "Rush + Rec yards", "passing+rushing_yards": "Pass + Rush yards",
+    "receiving_receptions": "Receptions", "rushing_attempts": "Rushing attempts",
+    "passing_attempts": "Pass attempts", "passing_completions": "Completions",
+    "passing_touchdowns": "Passing TDs", "passing_interceptions": "Interceptions thrown",
+    "touchdowns": "Touchdowns", "defense_sacks": "Sacks", "defense_combinedTackles": "Tackles + assists",
+    "defense_soloTackles": "Solo tackles", "fieldGoals_made": "Field goals made",
+    "receiving_longestReception": "Longest reception", "rushing_longestRush": "Longest rush",
+    "passing_longestCompletion": "Longest completion", "defense_interceptions": "Interceptions (defense)",
+    "kicking_totalPoints": "Kicking points", "extraPoints_kicksMade": "Extra points made",
+}
+
+
+# ---------------------------------------------------------------- odds math
+def imp(a):
+    a = float(a)
+    return 100 / (a + 100) if a > 0 else -a / (-a + 100)
+
+
+def american(p):
+    p = min(max(p, 1e-6), 1 - 1e-6)
+    v = -100 * p / (1 - p) if p >= 0.5 else 100 * (1 - p) / p
+    return round(v)
+
+
+def pmf_list(mean, cv, kmax):
+    """P(X=k), k=0..kmax, for a negative binomial with this mean and CV
+    (Poisson when cv is None or the CV is below the Poisson floor)."""
+    if cv is None or cv * cv <= 1.0 / mean + 1e-9:
+        out, p = [], math.exp(-mean)
+        for k in range(kmax + 1):
+            out.append(p)
+            p *= mean / (k + 1)
+        return out
+    r = 1.0 / (cv * cv - 1.0 / mean)
+    q = r / (r + mean)
+    out = [math.exp(r * math.log(q))]
+    for k in range(1, kmax + 1):
+        out.append(out[-1] * (k - 1 + r) / k * (1 - q))
+    return out
+
+
+def tail_over(pm, line):
+    """P(X > line), P(X == line)."""
+    k0 = math.floor(line) + 1
+    over = 1.0 - sum(pm[:k0])
+    push = pm[int(line)] if float(line).is_integer() and int(line) < len(pm) else 0.0
+    return max(over, 0.0), push
+
+
+def fit_mean(anchor_line, p_over, cv, iters=70):
+    """Mean whose curve gives P(X > anchor_line) = p_over (bisection)."""
+    lo, hi = 1e-3, max(5.0, anchor_line * 4 + 10)
+    for _ in range(iters):
+        m = (lo + hi) / 2
+        pm = pmf_list(m, cv, int(m * 4 + 40 + anchor_line))
+        if tail_over(pm, anchor_line)[0] < p_over:
+            lo = m
+        else:
+            hi = m
+    return (lo + hi) / 2
+
+
+# ---------------------------------------------------------------- SGO
+def get(path, params):
+    url = f"{BASE}/{path}/?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"X-Api-Key": KEY})
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < 2:
+                time.sleep(12)
+                continue
+            return {"success": False, "error": f"HTTP {e.code}: {e.read()[:300]!r}"}
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(5)
+                continue
+            return {"success": False, "error": repr(e)}
+
+
+def pull(league, cap, days, now):
+    iso = lambda d: d.isoformat(timespec="seconds").replace("+00:00", "Z")
+    events, cursor = [], None
+    while len(events) < cap:
+        p = {"leagueID": league, "oddsAvailable": "true", "includeAltLines": "true",
+             "startsAfter": iso(now), "startsBefore": iso(now + timedelta(days=days)),
+             "limit": min(10, cap - len(events))}
+        if cursor:
+            p["cursor"] = cursor
+        r = get("events", p)
+        time.sleep(7)  # free plan: 10 requests a minute
+        if "data" not in r:
+            print(f"{league}: {r.get('error')}", file=sys.stderr)
+            break
+        events += r["data"]
+        cursor = r.get("nextCursor")
+        if not cursor or not r["data"]:
+            break
+    return events
+
+
+def quotes(q):
+    """{line: odds} for a byBookmaker entry, main line + alts, open only."""
+    out = {}
+    if q.get("overUnder") is not None and q.get("odds") and q.get("available"):
+        out[float(q["overUnder"])] = int(float(q["odds"]))
+    for a in q.get("altLines") or []:
+        if a.get("overUnder") is not None and a.get("odds") and a.get("available"):
+            out.setdefault(float(a["overUnder"]), int(float(a["odds"])))
+    return out
+
+
+def team_info(t):
+    n = t.get("names") or {}
+    return {"id": t.get("teamID"), "name": n.get("long") or n.get("medium") or t.get("teamID"),
+            "abbr": n.get("short") or n.get("medium") or (t.get("teamID") or "")[:3]}
+
+
+def anchor(o, oq_all, uq_all):
+    """(line, p_over, n_books, how). SGO fair first, else our median vig removal."""
+    if o.get("fairOddsAvailable") and o.get("fairOdds") and o.get("fairOverUnder") is not None:
+        fl = float(o["fairOverUnder"])
+        n = sum(1 for b in oq_all if fl in oq_all[b] and fl in uq_all.get(b, {}))
+        return fl, imp(o["fairOdds"]), n, "sgo"
+    best = None
+    lines = {}
+    for b in oq_all:
+        for ln in oq_all[b]:
+            if ln in uq_all.get(b, {}):
+                po, pu = imp(oq_all[b][ln]), imp(uq_all[b][ln])
+                lines.setdefault(ln, []).append(po / (po + pu))
+    for ln, ps in lines.items():
+        if len(ps) >= 2 and (best is None or len(ps) > len(best[1])):
+            best = (ln, ps)
+    if best:
+        return best[0], st.median(best[1]), len(best[1]), "ours"
+    return None
+
+
+def two_sided_points(o, u):
+    """(anchor_line, p_anchor, [(line, consensus p_over)]) at non-anchor lines
+    where 2+ books quote both sides; used to fit each stat's spread."""
+    oq_all = {b: quotes(q) for b, q in (o.get("byBookmaker") or {}).items()}
+    uq_all = {b: quotes(q) for b, q in (u.get("byBookmaker") or {}).items()}
+    a = anchor(o, oq_all, uq_all)
+    if not a or not (0.02 < a[1] < 0.98):
+        return None
+    pts = {}
+    for b in oq_all:
+        for ln, oo in oq_all[b].items():
+            if ln != a[0] and ln in uq_all.get(b, {}):
+                po, pu = imp(oo), imp(uq_all[b][ln])
+                pts.setdefault(ln, []).append(po / (po + pu))
+    pts = [(ln, st.median(v)) for ln, v in pts.items() if len(v) >= 2 and not float(ln).is_integer()]
+    return (a[0], a[1], pts) if pts else None
+
+
+def fit_cv(samples, default):
+    """Pick the CV (or Poisson) that best matches the two-sided consensus rungs."""
+    grid = [None] + [round(0.12 + 0.03 * i, 2) for i in range(30)]
+    best, best_err = default, None
+    for cv in grid:
+        err = 0.0
+        for aline, ap, pts in samples:
+            m = fit_mean(aline, ap, cv, iters=40)
+            pm = pmf_list(m, cv, int(m * 5 + 60 + max(l for l, _ in pts) * 1.5))
+            for ln, p in pts:
+                err += (tail_over(pm, ln)[0] - p) ** 2
+        if best_err is None or err < best_err:
+            best, best_err = cv, err
+    n = sum(len(s[2]) for s in samples)
+    return best, round(math.sqrt(best_err / n) * 100, 2) if n else None
+
+
+def build_prop(o, u, cvs):
+    ob, ub = o.get("byBookmaker") or {}, u.get("byBookmaker") or {}
+    oq_all = {b: quotes(q) for b, q in ob.items()}
+    uq_all = {b: quotes(q) for b, q in ub.items()}
+    if not any(oq_all.get(b) or uq_all.get(b) for b in BOOKS):
+        return None
+    a = anchor(o, oq_all, uq_all)
+    if not a:
+        return None
+    aline, ap, an, how = a
+    if not (0.005 < ap < 0.995):
+        return None
+    stat = o.get("statID")
+    has_curve = stat in cvs
+    cv = cvs.get(stat)
+    lines = set()
+    for b in BOOKS:
+        lines |= set(oq_all.get(b, {})) | set(uq_all.get(b, {}))
+    if not has_curve:
+        lines = {ln for ln in lines if ln == aline}
+    if not lines:
+        return None
+    mean = None
+    if has_curve:
+        mean = fit_mean(aline, ap, cv)
+        pm = pmf_list(mean, cv, int(mean * 8 + 60 + max(lines) * 2))
+    rungs = []
+    for ln in sorted(lines):
+        if ln == aline:
+            po, push = ap, 0.0
+            if float(ln).is_integer() and has_curve:
+                po, push = tail_over(pm, ln)
+        else:
+            po, push = tail_over(pm, ln)
+        pu = max(1.0 - po - push, 0.0)
+        r = {"l": ln, "po": round(po, 4), "pu": round(pu, 4), "a": ln == aline}
+        if push:
+            r["pp"] = round(push, 4)
+        for b, k in BOOKS.items():
+            if ln in oq_all.get(b, {}):
+                r[k + "o"] = oq_all[b][ln]
+            if ln in uq_all.get(b, {}):
+                r[k + "u"] = uq_all[b][ln]
+        if any(k in r for k in ("dko", "dku", "fdo", "fdu")):
+            rungs.append(r)
+    if not rungs:
+        return None
+    return {"stat": stat, "statLabel": STAT_LABEL.get(stat, stat), "anchor": {
+        "l": aline, "p": round(ap, 4), "fair": american(ap), "n": an, "how": how},
+        "curve": has_curve, "mean": round(mean, 2) if mean else None, "rungs": rungs}
+
+
+def main():
+    if not KEY:
+        sys.exit("SGO_API_KEY is not set")
+    now = datetime.now(timezone.utc)
+    out = {"pulledAt": now.isoformat(timespec="seconds"), "source": SOURCE, "games": [], "props": [],
+           "curves": {}}
+    meta_sample = None
+    used = 0
+    raw, samples = [], {}
+    for lg, (cap, days) in CAPS.items():
+        events = pull(lg, cap, days, now)
+        used += len(events)
+        for ev in events:
+            teams = ev.get("teams") or {}
+            home, away = team_info(teams.get("home") or {}), team_info(teams.get("away") or {})
+            gid = ev.get("eventID")
+            start = (ev.get("status") or {}).get("startsAt")
+            out["games"].append({"id": gid, "sport": SPORT_LABEL[lg], "start": start, "home": home, "away": away})
+            players = ev.get("players") or {}
+            if meta_sample is None:
+                meta_sample = {"teams": teams, "status": ev.get("status"),
+                               "players_first3": dict(list(players.items())[:3])}
+            odds = ev.get("odds") or {}
+            for oid, o in odds.items():
+                if o.get("betTypeID") != "ou" or o.get("sideID") != "over" or o.get("periodID") != "game":
+                    continue
+                pid = o.get("playerID")
+                if not pid or (o.get("statEntityID") or "") in TEAM_ENTITIES:
+                    continue
+                u = odds.get(o.get("opposingOddID") or "") or {}
+                raw.append((lg, ev, home, away, gid, start, players, o, u))
+                pts = two_sided_points(o, u)
+                if pts and o.get("statID") in CURVES:
+                    samples.setdefault(o.get("statID"), []).append(pts)
+
+    # fit each stat's spread to tonight's two-sided rungs (needs 15+ points)
+    cvs, fits = dict(CURVES), {}
+    for stat, smp in samples.items():
+        smp = smp[:60]
+        n = sum(len(x[2]) for x in smp)
+        if n >= 15:
+            cv, rmse = fit_cv(smp, CURVES[stat])
+            cvs[stat] = cv
+            fits[stat] = {"cv": cv, "points": n, "rmsePts": rmse, "fitted": True}
+    for stat in CURVES:
+        fits.setdefault(stat, {"cv": CURVES[stat], "points": sum(len(x[2]) for x in samples.get(stat, [])), "fitted": False})
+    out["curves"] = fits
+
+    for lg, ev, home, away, gid, start, players, o, u in raw:
+        pid = o.get("playerID")
+        prop = build_prop(o, u, cvs)
+        if not prop:
+            continue
+        pl = players.get(pid) or {}
+        tid = pl.get("teamID")
+        team = home if tid == home["id"] else away if tid == away["id"] else {"id": tid, "name": tid, "abbr": tid}
+        opp = away if team is home else home if team is away else None
+        prop.update({"sport": SPORT_LABEL[lg], "game": gid, "start": start,
+                     "player": pl.get("name") or (pl.get("firstName", "") + " " + pl.get("lastName", "")).strip() or pid,
+                     "pid": pid, "team": team.get("abbr"), "teamName": team.get("name"),
+                     "opp": opp.get("abbr") if opp else None})
+        out["props"].append(prop)
+    out["objectsUsed"] = used
+    os.makedirs(os.path.join(ROOT, "docs"), exist_ok=True)
+    with open(os.path.join(ROOT, "docs", "data.json"), "w") as f:
+        json.dump(out, f, separators=(",", ":"))
+    os.makedirs(os.path.join(ROOT, "coverage"), exist_ok=True)
+    with open(os.path.join(ROOT, "coverage", "meta_sample.json"), "w") as f:
+        json.dump(meta_sample, f, indent=1)
+    print(f"{len(out['games'])} games, {len(out['props'])} props, "
+          f"{sum(len(p['rungs']) for p in out['props'])} rungs, {used} SGO objects")
+
+
+if __name__ == "__main__":
+    main()
