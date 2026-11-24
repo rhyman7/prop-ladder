@@ -1,0 +1,35 @@
+name: Coverage test (SportsGameOdds)
+
+# Run by hand only. Pulls upcoming events for NFL, NCAAF, NBA and NCAAB once,
+# counts Pinnacle / DraftKings / FanDuel player props and alt lines, and commits
+# the report to coverage/. Uses about 1 SGO object per event (capped per league).
+on:
+  workflow_dispatch:
+    inputs:
+      max_events:
+        description: "Max events per league"
+        default: "25"
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run coverage test
+        env:
+          SGO_API_KEY: ${{ secrets.SGO_API_KEY }}
+          MAX_EVENTS: ${{ inputs.max_events }}
+        run: python scripts/coverage_test.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add coverage
+          git commit -m "Coverage test report" || echo "nothing to commit"
+          git push
