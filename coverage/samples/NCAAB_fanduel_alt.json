@@ -1,0 +1,200 @@
+{
+ "oddID": "points-ACE_GLASS_1_NCAAB-game-ou-over",
+ "opposingOddID": "points-ACE_GLASS_1_NCAAB-game-ou-under",
+ "marketName": "Ace Glass Points Over/Under",
+ "statID": "points",
+ "statEntityID": "ACE_GLASS_1_NCAAB",
+ "periodID": "game",
+ "betTypeID": "ou",
+ "sideID": "over",
+ "playerID": "ACE_GLASS_1_NCAAB",
+ "started": false,
+ "ended": false,
+ "cancelled": false,
+ "bookOddsAvailable": true,
+ "fairOddsAvailable": true,
+ "fairOdds": "+111",
+ "bookOdds": "-109",
+ "fairOverUnder": "16.5",
+ "bookOverUnder": "15.5",
+ "openFairOdds": "+110",
+ "openBookOdds": "+100",
+ "openFairOverUnder": "16.5",
+ "openBookOverUnder": "16.5",
+ "scoringSupported": false,
+ "byBookmaker": {
+  "draftkings": {
+   "lastUpdatedAt": "2026-11-24T16:20:10.000Z",
+   "available": false,
+   "odds": "-110",
+   "overUnder": "16.5",
+   "altLines": [
+    {
+     "lastUpdatedAt": "2026-11-24T15:21:54.000Z",
+     "available": false,
+     "odds": "-3500",
+     "overUnder": "7.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "available": true,
+     "odds": "-1400",
+     "overUnder": "9.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "available": true,
+     "odds": "-525",
+     "overUnder": "11.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "available": true,
+     "odds": "-200",
+     "overUnder": "14.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "available": true,
+     "odds": "-150",
+     "overUnder": "15.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "available": true,
+     "odds": "+115",
+     "overUnder": "17.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "available": true,
+     "odds": "+185",
+     "overUnder": "19.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "available": true,
+     "odds": "+600",
+     "overUnder": "24.5"
+    }
+   ]
+  },
+  "fanduel": {
+   "lastUpdatedAt": "2026-11-24T23:22:40.000Z",
+   "available": true,
+   "odds": "-130",
+   "overUnder": "15.5",
+   "deeplink": "https://sportsbook.fanduel.com/addToBetslip?marketId=42.628318825&selectionId=105509756",
+   "altLines": [
+    {
+     "lastUpdatedAt": "2026-11-24T23:22:40.000Z",
+     "available": true,
+     "odds": "-850",
+     "overUnder": "9.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:22:40.000Z",
+     "available": true,
+     "odds": "-172",
+     "overUnder": "14.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:22:40.000Z",
+     "available": true,
+     "odds": "+200",
+     "overUnder": "19.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:22:40.000Z",
+     "available": true,
+     "odds": "+590",
+     "overUnder": "24.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:22:40.000Z",
+     "available": true,
+     "odds": "+1600",
+     "overUnder": "29.5"
+    }
+   ]
+  },
+  "betmgm": {
+   "lastUpdatedAt": "2026-11-24T23:21:52.000Z",
+   "available": true,
+   "odds": "-105",
+   "overUnder": "15.5",
+   "deeplink": "https://www.nj.betmgm.com/en/sports?options=6:50990-4717307-7840066",
+   "altLines": [
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:52.000Z",
+     "available": true,
+     "odds": "-550",
+     "overUnder": "9.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:52.000Z",
+     "available": true,
+     "odds": "-140",
+     "overUnder": "14.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:52.000Z",
+     "available": true,
+     "odds": "+230",
+     "overUnder": "19.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:52.000Z",
+     "available": true,
+     "odds": "+600",
+     "overUnder": "24.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:52.000Z",
+     "available": true,
+     "odds": "+1100",
+     "overUnder": "29.5"
+    }
+   ]
+  },
+  "caesars": {
+   "lastUpdatedAt": "2026-11-24T23:21:01.000Z",
+   "available": true,
+   "odds": "-103",
+   "overUnder": "16.5",
+   "altLines": [
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:01.000Z",
+     "available": true,
+     "odds": "-850",
+     "overUnder": "9.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:01.000Z",
+     "available": true,
+     "odds": "-190",
+     "overUnder": "14.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T21:01:08.000Z",
+     "available": false,
+     "odds": "-130",
+     "overUnder": "15.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:01.000Z",
+     "available": true,
+     "odds": "+172",
+     "overUnder": "19.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-24T23:21:01.000Z",
+     "available": true,
+     "odds": "+475",
+     "overUnder": "24.5"
+    }
+   ],
+   "deeplink": "https://sportsbook.caesars.com/us/nj/bet/betslip?selectionIds=4216608c-692b-3d02-88be-011c99664127"
+  }
+ }
+}
