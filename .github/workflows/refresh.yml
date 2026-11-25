@@ -14,7 +14,7 @@ name: Refresh prices
 on:
   workflow_dispatch:
   schedule:
-    - cron: "7 * * * *"   # hourly at :07
+    - cron: "13 * * * *"   # hourly at :13 (off the busy top of the hour)
 
 permissions:
   contents: write
