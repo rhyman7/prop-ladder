@@ -59,7 +59,7 @@
   const $ = (id) => document.getElementById(id);
   let data;
   try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
-  $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'pinnacle' ? ' · Pinnacle' : ' · consensus');
+  $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'wide' ? ' · wide (sharp first)' : ' · consensus');
   const props = data.props;
   const h = new URLSearchParams(location.hash.slice(1));
   const S = { sport: h.get('sport'), team: h.get('team'), pid: h.get('pid'), stat: h.get('stat'), side: h.get('side') || 'o', boost: +(h.get('boost') || 0) };
@@ -125,13 +125,15 @@
       return `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m">${PL.fair(pTrue)}</td><td class="m sep${r.n < 2 ? ' na' : ''}">${r.n}${r.ns ? ' · ' + r.ns + ' sharp' : ''}</td>${cells[0]}${cells[1]}</tr>`;
     });
     $('rows').innerHTML = rows.join('') || '<tr><td class="l" colspan="12">Neither book offers this side.</td></tr>';
-    const curveTxt = `Every rung: each of ${prop.books} books' vig removed, median of the books posting it`;
+    const curveTxt = data.source === 'wide'
+      ? `Each book's vig removed; rungs a sharp book prices use the sharp books' median, the rest the median of all ${prop.books} books`
+      : `Every rung: each of ${prop.books} books' vig removed, median of the books posting it`;
     const game = data.games.find((g) => g.id === prop.game);
     const vs = game ? (game.away.name + ' at ' + game.home.name) : '';
     $('facts').innerHTML = `
       <div class="card fact"><span class="lbl">Anchor</span><span class="big">Over ${a.l} · ${PL.pct(a.p)}</span>
         <span class="small">Fair ${PL.fmtOdds(a.fair)} · ${a.n >= 2 ? 'median of ' + a.n + ' books quoting both sides, vig removed' : 'only 1 book quotes both sides: weak anchor'}</span></div>
-      <div class="card fact"><span class="lbl">Source</span><span><span class="tag dark">${data.source === 'pinnacle' ? 'Pinnacle' : 'Consensus'}</span> <span class="tag">${PL.esc(vs)}</span></span>
+      <div class="card fact"><span class="lbl">Source</span><span><span class="tag dark">${data.source === 'wide' ? 'Wide · sharp first' : 'Consensus'}</span> <span class="tag">${PL.esc(vs)}</span></span>
         <span class="small">${PL.esc(curveTxt)} · ${PL.when(prop.start)} ET</span></div>
       <div class="card fact"><span class="lbl">Best bet on this ladder</span>
         <span class="big ${best ? 'good' : ''}">${best ? best.label + ' at ' + (best.bk === 'dk' ? 'DraftKings' : 'FanDuel') + ' ' + PL.fmtOdds(best.odds) : 'No +EV rung'}</span>

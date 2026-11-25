@@ -57,7 +57,7 @@
   const $ = (id) => document.getElementById(id);
   let data;
   try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
-  $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'pinnacle' ? ' · Pinnacle' : ' · consensus');
+  $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'wide' ? ' · wide (sharp first)' : ' · consensus');
   const S = { sport: 'All', book: 'Both', min: 0, basis: 2, boost: 0 };
   const games = new Map(data.games.map((g) => [g.id, g]));
   const MAX_ROWS = 300;
