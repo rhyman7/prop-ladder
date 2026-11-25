@@ -32,9 +32,9 @@ SOURCE = "consensus"  # "pinnacle" once a paid key carries it
 # (max events per run, days ahead). About 1 SGO object per event.
 CAPS = {
     "NFL": (int(os.environ.get("CAP_NFL", 16)), 4),
-    "NCAAF": (int(os.environ.get("CAP_NCAAF", 25)), 3),
+    "NCAAF": (int(os.environ.get("CAP_NCAAF", 40)), 3),
     "NBA": (int(os.environ.get("CAP_NBA", 15)), 2),
-    "NCAAB": (int(os.environ.get("CAP_NCAAB", 20)), 2),
+    "NCAAB": (int(os.environ.get("CAP_NCAAB", 40)), 2),
 }
 SPORT_LABEL = {"NFL": "NFL", "NCAAF": "CFB", "NBA": "NBA", "NCAAB": "NCAAB"}
 BOOKS = {"draftkings": "dk", "fanduel": "fd"}
@@ -43,6 +43,13 @@ BOOKS = {"draftkings": "dk", "fanduel": "fd"}
 # not change this page's method. A Pinnacle version must be a separate build.
 FREE_BOOKS = {"draftkings", "fanduel", "caesars", "betmgm", "bovada", "espnbet",
               "pointsbet", "unibet", "williamhill"}
+# WIDE version (Rookie trial, from Nov 24, 2026): the 9 books plus sharper,
+# lower-vig books and exchanges. Where any of these SHARP books posts a rung,
+# its true probability = the median of the sharp books alone; otherwise the
+# median of all WIDE books. Pick'em apps (underdog, sleeper, prizepicks) excluded.
+SHARP_BOOKS = {"bookmakereu", "betonline", "lowvig", "novig", "prophetexchange",
+               "kalshi", "polymarket", "matchbook", "betfairexchange"}
+WIDE_BOOKS = FREE_BOOKS | SHARP_BOOKS
 TEAM_ENTITIES = {"home", "away", "all"}
 
 # Assumed coefficient of variation (sd / mean) per stat. STARTING VALUES, NOT
@@ -251,13 +258,14 @@ def power_k(po, pu):
     return (lo + hi) / 2
 
 
-def build_prop(o, u):
+def build_prop(o, u, books=None, sharp=None):
     """Market ladder: each book's vig, measured on its own two-sided line(s), is
     removed from every rung it posts (power method); a rung's true probability
     is the median across the books posting it."""
     ob, ub = o.get("byBookmaker") or {}, u.get("byBookmaker") or {}
-    oq_all = {b: quotes(q) for b, q in ob.items() if b in FREE_BOOKS}
-    uq_all = {b: quotes(q) for b, q in ub.items() if b in FREE_BOOKS}
+    books = books or FREE_BOOKS
+    oq_all = {b: quotes(q) for b, q in ob.items() if b in books}
+    uq_all = {b: quotes(q) for b, q in ub.items() if b in books}
     if not any(oq_all.get(b) or uq_all.get(b) for b in BOOKS):
         return None
     a = anchor(o, oq_all, uq_all)
@@ -284,9 +292,13 @@ def build_prop(o, u):
             fair.setdefault(ln, {}).setdefault(b, []).append(1 - imp(odds) ** k)
     rungs = []
     for ln in sorted(fair):
-        per_book = [st.mean(v) for v in fair[ln].values()]
-        po = min(max(st.median(per_book), 0.001), 0.999)
+        per_book = {b: st.mean(v) for b, v in fair[ln].items()}
+        sharp_p = [v for b, v in per_book.items() if sharp and b in sharp]
+        use = sharp_p or list(per_book.values())
+        po = min(max(st.median(use), 0.001), 0.999)
         r = {"l": ln, "po": round(po, 4), "pu": round(1 - po, 4), "n": len(per_book), "a": ln == aline}
+        if sharp:
+            r["ns"] = len(sharp_p)
         for b, key in BOOKS.items():
             if ln in oq_all.get(b, {}):
                 r[key + "o"] = oq_all[b][ln]
@@ -334,24 +346,34 @@ def main():
                 u = odds.get(o.get("opposingOddID") or "") or {}
                 raw.append((lg, ev, home, away, gid, start, players, o, u))
 
+    wide = {"pulledAt": out["pulledAt"], "source": "wide", "games": out["games"], "props": [],
+            "method": "market-ladder, sharp books first", "books": sorted(WIDE_BOOKS), "sharp": sorted(SHARP_BOOKS)}
     for lg, ev, home, away, gid, start, players, o, u in raw:
         pid = o.get("playerID")
-        prop = build_prop(o, u)
-        if not prop:
-            continue
-        pl = players.get(pid) or {}
-        tid = pl.get("teamID")
-        team = home if tid == home["id"] else away if tid == away["id"] else {"id": tid, "name": tid, "abbr": tid}
-        opp = away if team is home else home if team is away else None
-        prop.update({"sport": SPORT_LABEL[lg], "game": gid, "start": start,
-                     "player": pl.get("name") or (pl.get("firstName", "") + " " + pl.get("lastName", "")).strip() or pid,
-                     "pid": pid, "team": team.get("abbr"), "teamName": team.get("name"),
-                     "opp": opp.get("abbr") if opp else None})
-        out["props"].append(prop)
+        for target, kw in ((out, {}), (wide, {"books": WIDE_BOOKS, "sharp": SHARP_BOOKS})):
+            prop = build_prop(o, u, **kw)
+            if not prop:
+                continue
+            pl = players.get(pid) or {}
+            tid = pl.get("teamID")
+            team = home if tid == home["id"] else away if tid == away["id"] else {"id": tid, "name": tid, "abbr": tid}
+            opp = away if team is home else home if team is away else None
+            prop.update({"sport": SPORT_LABEL[lg], "game": gid, "start": start,
+                         "player": pl.get("name") or (pl.get("firstName", "") + " " + pl.get("lastName", "")).strip() or pid,
+                         "pid": pid, "team": team.get("abbr"), "teamName": team.get("name"),
+                         "opp": opp.get("abbr") if opp else None})
+            target["props"].append(prop)
     out["objectsUsed"] = used
     os.makedirs(os.path.join(ROOT, "docs"), exist_ok=True)
     with open(os.path.join(ROOT, "docs", "data.json"), "w") as f:
         json.dump(out, f, separators=(",", ":"))
+    if os.environ.get("BUILD_WIDE", "1") == "1":
+        wide["objectsUsed"] = used
+        os.makedirs(os.path.join(ROOT, "docs", "wide"), exist_ok=True)
+        with open(os.path.join(ROOT, "docs", "wide", "data.json"), "w") as f:
+            json.dump(wide, f, separators=(",", ":"))
+        print(f"wide: {len(wide['props'])} props, "
+              f"{sum(1 for p in wide['props'] for r in p['rungs'] if r.get('ns'))} rungs priced by sharp books")
     os.makedirs(os.path.join(ROOT, "coverage"), exist_ok=True)
     with open(os.path.join(ROOT, "coverage", "meta_sample.json"), "w") as f:
         json.dump(meta_sample, f, indent=1)

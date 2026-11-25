@@ -12,6 +12,7 @@ Run after build.py (same workflow). Uses docs/data.json as the current market.
 Log: data/plays_log.json (not served). Summary: docs/results.json.
 """
 import json
+import math
 import os
 import sys
 import time
@@ -101,48 +102,137 @@ def log_plays(log, data):
     return added, updated
 
 
-def grade(log, now):
-    due = sorted({row["game"] for row in log.values()
-                  if row["status"] == "pending" and parse(row["start"]) < now - timedelta(hours=GRADE_AFTER_H)})
-    due = due[:MAX_GRADE]
-    graded = fetched = 0
-    for i in range(0, len(due), 10):
-        chunk = due[i:i + 10]
+def due_games(logs, compare, now):
+    cut = now - timedelta(hours=GRADE_AFTER_H)
+    games = {row["game"] for log in logs for row in log.values()
+             if row["status"] == "pending" and parse(row["start"]) < cut}
+    games |= {k.split("|")[0] for k, c in compare.items() if c.get("r") is None and parse(c["s"]) < cut}
+    return sorted(games)[:MAX_GRADE]
+
+
+def fetch_events(games):
+    evs = {}
+    for i in range(0, len(games), 10):
+        chunk = games[i:i + 10]
         resp = get({"eventIDs": ",".join(chunk), "limit": len(chunk)})
-        time.sleep(7)
+        time.sleep(3)
         if "data" not in resp:
             print("grade fetch:", resp.get("error"), file=sys.stderr)
             continue
-        fetched += len(resp["data"])
         for ev in resp["data"]:
-            stt = ev.get("status") or {}
-            if not (stt.get("finalized") or stt.get("ended") or stt.get("completed")):
+            evs[ev.get("eventID")] = ev
+    return evs
+
+
+def final_score(ev, pid, stat):
+    """('final'|'void'|'wait', score)."""
+    stt = ev.get("status") or {}
+    if stt.get("cancelled"):
+        return "void", None
+    if not (stt.get("finalized") or stt.get("ended") or stt.get("completed")):
+        return "wait", None
+    o = (ev.get("odds") or {}).get(f"{stat}-{pid}-game-ou-over") or {}
+    if o.get("score") is None:
+        return ("void", None) if stt.get("finalized") else ("wait", None)
+    return "final", float(o["score"])
+
+
+def grade(log, evs, now):
+    graded = 0
+    for row in log.values():
+        if row["status"] != "pending" or row["game"] not in evs:
+            continue
+        state, score = final_score(evs[row["game"]], row["pid"], row["stat"])
+        if state == "wait":
+            continue
+        if state == "void":
+            row.update(status="void", result="void", actual=None, graded_at=now.isoformat(timespec="seconds"))
+            graded += 1
+            continue
+        ln = float(row["line"])
+        res = "push" if score == ln else "win" if (score > ln) == (row["side"] == "o") else "loss"
+        pr = profit10(row["first_odds"])
+        row.update(status="graded", result=res, actual=score, graded_at=now.isoformat(timespec="seconds"),
+                   profit=round(pr if res == "win" else -10.0 if res == "loss" else 0.0, 2))
+        graded += 1
+    return graded
+
+
+def log_compare(compare, cons, wide):
+    """Every rung both versions price where the wide version used sharp books:
+    first and last pre-kickoff P(over) from each (c = 9-book, w = wide)."""
+    now = parse(wide["pulledAt"])
+    cmap = {}
+    for p in cons["props"]:
+        for r in p["rungs"]:
+            cmap[f'{p["game"]}|{p["pid"]}|{p["stat"]}|{r["l"]}'] = r["po"]
+    n = 0
+    for p in wide["props"]:
+        if not p.get("start") or parse(p["start"]) <= now:
+            continue
+        for r in p["rungs"]:
+            if not r.get("ns") or float(r["l"]).is_integer():
                 continue
-            cancelled = stt.get("cancelled")
-            odds = ev.get("odds") or {}
-            for row in log.values():
-                if row["game"] != ev.get("eventID") or row["status"] != "pending":
-                    continue
-                o = odds.get(f'{row["stat"]}-{row["pid"]}-game-ou-over') or {}
-                score = o.get("score")
-                if cancelled or score is None:
-                    if stt.get("finalized") or cancelled:
-                        row.update(status="void", result="void", actual=None, graded_at=now.isoformat(timespec="seconds"))
-                        graded += 1
-                    continue
-                score = float(score)
-                ln = float(row["line"])
-                if score == ln:
-                    res = "push"
-                elif (score > ln) == (row["side"] == "o"):
-                    res = "win"
-                else:
-                    res = "loss"
-                pr = profit10(row["first_odds"])
-                row.update(status="graded", result=res, actual=score, graded_at=now.isoformat(timespec="seconds"),
-                           profit=round(pr if res == "win" else -10.0 if res == "loss" else 0.0, 2))
-                graded += 1
-    return graded, fetched
+            key = f'{p["game"]}|{p["pid"]}|{p["stat"]}|{r["l"]}'
+            if key not in cmap:
+                continue
+            c = compare.get(key)
+            if c is None:
+                compare[key] = {"s": p["start"], "sp": p["sport"], "c1": cmap[key], "w1": r["po"],
+                                "c": cmap[key], "w": r["po"], "ns": r["ns"], "r": None}
+            elif c.get("r") is None:
+                c.update(c=cmap[key], w=r["po"], ns=r["ns"])
+            n += 1
+    return n
+
+
+def grade_compare(compare, evs):
+    n = 0
+    for key, c in compare.items():
+        if c.get("r") is not None:
+            continue
+        game, pid, stat, line = key.split("|")
+        if game not in evs:
+            continue
+        state, score = final_score(evs[game], pid, stat)
+        if state == "wait":
+            continue
+        c["r"] = "v" if state == "void" else (1 if score > float(line) else 0)
+        n += 1
+    return n
+
+
+def compare_summary(compare, now):
+    rows = [(k, c) for k, c in compare.items() if c.get("r") in (0, 1)]
+
+    def stats(sub, a, b):
+        if not sub:
+            return None
+        bs = lambda p, y: (p - y) ** 2
+        ll = lambda p, y: -math.log(min(max(p if y else 1 - p, 1e-4), 1))
+        # cluster by prop (game|player|stat): rungs of one prop are not independent
+        by = {}
+        for k, c in sub:
+            by.setdefault(k.rsplit("|", 1)[0], []).append(bs(c[b], c["r"]) - bs(c[a], c["r"]))
+        d = [sum(v) / len(v) for v in by.values()]
+        mu = sum(d) / len(d)
+        se = (sum((x - mu) ** 2 for x in d) / (len(d) - 1)) ** .5 / len(d) ** .5 if len(d) > 1 else None
+        return {"rungs": len(sub), "props": len(by),
+                "brier9": round(sum(bs(c[a], c["r"]) for _, c in sub) / len(sub), 5),
+                "brierWide": round(sum(bs(c[b], c["r"]) for _, c in sub) / len(sub), 5),
+                "logloss9": round(sum(ll(c[a], c["r"]) for _, c in sub) / len(sub), 4),
+                "loglossWide": round(sum(ll(c[b], c["r"]) for _, c in sub) / len(sub), 4),
+                "diff": round(mu, 5), "diffSE": round(se, 5) if se else None,
+                "meanGap": round(sum(abs(c[b] - c[a]) for _, c in sub) / len(sub), 4)}
+
+    out = {"updatedAt": now.isoformat(timespec="seconds"),
+           "tracked": len(compare), "pending": sum(c.get("r") is None for c in compare.values()),
+           "last": stats(rows, "c", "w"), "first": stats(rows, "c1", "w1"), "bySport": []}
+    for sp in ("NFL", "CFB", "NBA", "NCAAB"):
+        sub = [(k, c) for k, c in rows if c["sp"] == sp]
+        if sub:
+            out["bySport"].append({"sport": sp, **stats(sub, "c", "w")})
+    return out
 
 
 def bucket_edge(e):
@@ -227,25 +317,57 @@ def build_results(log, now):
             "recent": [{k: r.get(k) for k in keep} for r in recent]}
 
 
+VERSIONS = [
+    ("9-book", "docs/data.json", "data/plays_log.json", "docs/results.json"),
+    ("wide", "docs/wide/data.json", "data/wide_plays_log.json", "docs/wide/results.json"),
+]
+COMPARE_LOG = os.path.join(ROOT, "data", "compare_log.json")
+COMPARE_OUT = os.path.join(ROOT, "docs", "compare.json")
+
+
+def load(path, default):
+    path = os.path.join(ROOT, path) if not os.path.isabs(path) else path
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    return default
+
+
+def save(path, obj):
+    path = os.path.join(ROOT, path) if not os.path.isabs(path) else path
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(obj, f, separators=(",", ":"))
+
+
 def main():
-    with open(os.path.join(ROOT, "docs", "data.json")) as f:
-        data = json.load(f)
-    log = {}
-    if os.path.exists(LOG):
-        with open(LOG) as f:
-            log = json.load(f)
     now = datetime.now(timezone.utc)
-    added, updated = log_plays(log, data)
-    graded, fetched = (0, 0)
+    vers = []
+    for name, data_p, log_p, out_p in VERSIONS:
+        data = load(data_p, None)
+        if data is None:
+            continue
+        log = load(log_p, {})
+        added, updated = log_plays(log, data)
+        vers.append((name, data, log, log_p, out_p))
+        print(f"{name}: logged {added} new plays, updated {updated}")
+    compare = load(COMPARE_LOG, {})
+    d = {v[0]: v[1] for v in vers}
+    if "9-book" in d and "wide" in d:
+        print(f"compare: {log_compare(compare, d['9-book'], d['wide'])} rungs updated, {len(compare)} tracked")
+    fetched = 0
     if KEY:
-        graded, fetched = grade(log, now)
-    os.makedirs(os.path.dirname(LOG), exist_ok=True)
-    with open(LOG, "w") as f:
-        json.dump(log, f, separators=(",", ":"))
-    with open(OUT, "w") as f:
-        json.dump(build_results(log, now), f, separators=(",", ":"))
-    print(f"logged {added} new plays, updated {updated}, graded {graded} ({fetched} SGO objects); "
-          f"{sum(r['status'] == 'pending' for r in log.values())} pending")
+        games = due_games([v[2] for v in vers], compare, now)
+        evs = fetch_events(games) if games else {}
+        fetched = len(evs)
+        for name, data, log, log_p, out_p in vers:
+            print(f"{name}: graded {grade(log, evs, now)}")
+        print(f"compare: graded {grade_compare(compare, evs)} rungs; {fetched} SGO objects")
+    for name, data, log, log_p, out_p in vers:
+        save(log_p, log)
+        save(out_p, build_results(log, now))
+    save(COMPARE_LOG, compare)
+    save(COMPARE_OUT, compare_summary(compare, now))
 
 
 if __name__ == "__main__":

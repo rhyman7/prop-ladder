@@ -26,13 +26,15 @@
   <header>
     <div>
       <h1>Results</h1>
-      <p class="sub">How the Prop Ladder's All +EV plays actually did: every +EV rung with 2+ books, $10 flat at the first price seen, no boost.</p>
+      <p class="sub">How the Prop Ladder's All +EV plays actually did: every +EV rung with 2+ books, $10 flat at the first price seen, no boost. Switch between the free 9-book version and the Wide trial version.</p>
     </div>
     <div class="hdr-right">
       <p class="stamp" id="stamp">Loading…</p>
     </div>
   </header>
 
+  <div class="pills" id="vers" role="group" aria-label="Version"></div>
+  <section class="card" id="h2h" aria-label="Head-to-head: 9-book vs Wide" hidden></section>
   <div id="msg"></div>
   <section class="kpis" id="kpis" aria-label="Summary"></section>
 
@@ -68,8 +70,28 @@
 <script>
 (async () => {
   const $ = (id) => document.getElementById(id);
+  const V = new URLSearchParams(location.search).get('v') === 'wide' ? 'wide' : '9';
+  $('vers').innerHTML = [['9', '9-book (free)', 'results.html'], ['wide', 'Wide (trial)', 'results.html?v=wide']]
+    .map(([v, label, href]) => `<a class="pill" style="display:inline-flex;align-items:center;text-decoration:none" href="${href}" aria-pressed="${v === V}"${v === V ? ' aria-current="page"' : ''}>${label}</a>`).join('');
+  try {
+    const c = await fetch('compare.json', { cache: 'no-store' });
+    if (c.ok) {
+      const H = await c.json(), L = H.last;
+      const verdict = !L ? 'No compared rungs graded yet.' : L.diffSE == null ? 'Too few props graded to judge.'
+        : Math.abs(L.diff) < 1.96 * L.diffSE ? 'No clear winner yet: the gap is within the margin of error.'
+        : (L.diff < 0 ? 'Wide is more accurate' : '9-book is more accurate') + ' (beyond 2 standard errors).';
+      const row = (s) => `<tr><th class="l b" scope="row">${s.sport || 'All'}</th><td>${s.props}</td><td>${s.rungs}</td><td>${s.brier9.toFixed(4)}</td><td>${s.brierWide.toFixed(4)}</td>
+        <td class="${s.diff < 0 ? 'pos' : s.diff > 0 ? 'neg' : ''}">${(s.diff >= 0 ? '+' : '−') + Math.abs(s.diff).toFixed(4)}${s.diffSE ? ' <span class="m" style="font-weight:400">± ' + s.diffSE.toFixed(4) + '</span>' : ''}</td><td class="m">${(s.meanGap * 100).toFixed(1)} pts</td></tr>`;
+      $('h2h').hidden = false;
+      $('h2h').innerHTML = `<h2 class="cardhead">Head-to-head: which true probability is more accurate?</h2>
+        <p class="small" style="margin:6px 16px 0">${H.tracked} rungs where the Wide version used sharp books · ${H.pending} waiting on games. Scored at the last refresh before kickoff (Brier: lower is better).</p>
+        <p class="b" style="margin:8px 16px 4px;font-size:15px">${verdict}</p>
+        ${L ? `<div class="scroll"><table class="compact"><thead><tr><th class="l" scope="col">Sport</th><th scope="col">Props</th><th scope="col">Rungs</th><th scope="col">Brier 9-book</th><th scope="col">Brier Wide</th><th scope="col">Wide − 9-book</th><th scope="col">Avg gap</th></tr></thead>
+        <tbody>${row(L)}${(H.bySport || []).map(row).join('')}</tbody></table></div>` : ''}`;
+    }
+  } catch (e) {}
   let R;
-  try { const r = await fetch('results.json', { cache: 'no-store' }); if (!r.ok) throw 0; R = await r.json(); }
+  try { const r = await fetch(V === 'wide' ? 'wide/results.json' : 'results.json', { cache: 'no-store' }); if (!r.ok) throw 0; R = await r.json(); }
   catch (e) { $('stamp').textContent = 'No results yet'; $('msg').innerHTML = '<p class="warn">Tracking starts with the next price refresh. Results appear once games finish.</p>'; return; }
   $('stamp').textContent = 'Updated ' + new Date(R.updatedAt).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' ET';
   const money = (x) => x == null ? '—' : PL.money(x);

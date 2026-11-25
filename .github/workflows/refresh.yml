@@ -5,13 +5,16 @@ name: Refresh prices
 # Cost: about 1 SGO object per event; the caps in scripts/build.py
 # (16 + 25 + 15 + 20) keep the pull at 76 objects or fewer, and grading adds
 # about 1 per finished game with logged plays (at most 40 a run).
-# Free plan: 2,500 objects a month. NO SCHEDULE YET: Ryan picks the frequency.
-#   once a day   ~ 2,300 a month (most of the free allowance)
-#   every 2 days ~ 1,150 a month
+# ROOKIE TRIAL (Nov 24 - Dec 1, 2026): hourly. One run = one pull (caps 16 +
+# 40 + 15 + 40 = 111 events) feeding BOTH versions, + grading (<= 40).
+# ~2,700 objects a day; Rookie allows 100,000 a month.
+# IF THE TRIAL IS CANCELLED: back to the free 2,500 a month -> change the cron
+# to every 2 days ("17 15 */2 * *") and set CAP_NCAAF/CAP_NCAAB back to 25/20
+# (~1,150 a month + grading), and set BUILD_WIDE=0 (no wide books on free).
 on:
   workflow_dispatch:
-  # schedule:
-  #   - cron: "17 15 * * *"   # once a day, 10:17 AM ET
+  schedule:
+    - cron: "7 * * * *"   # hourly at :07
 
 permissions:
   contents: write
@@ -40,6 +43,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          git add docs/data.json docs/results.json data/plays_log.json coverage/meta_sample.json
+          git add docs/data.json docs/results.json docs/compare.json docs/wide data/ coverage/meta_sample.json
           git commit -m "Refresh prices" || echo "nothing to commit"
           git pull --rebase -q && git push

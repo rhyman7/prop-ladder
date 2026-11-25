@@ -77,13 +77,13 @@
     pills($('sports'), 'sport', [['All', 'All'], ...PL.SPORTS.map((s) => [s, s])]);
     pills($('books'), 'book', [['Both', 'Both'], ['dk', 'DK'], ['fd', 'FD']]);
     pills($('mins'), 'min', [[0, 'Any'], [1, '1%+'], [2, '2%+'], [3, '3%+']]);
-    pills($('basis'), 'basis', [[1, 'Any'], [2, '2+'], [3, '3+'], [4, '4+']]);
+    pills($('basis'), 'basis', [[1, 'Any'], [2, '2+'], [3, '3+'], [4, '4+']].concat(data.source === 'wide' ? [['s', 'Sharp-priced']] : []));
     pills($('boosts'), 'boost', PL.BOOSTS.map((b) => [b, b ? b + '%' : 'None']));
     const B = S.boost / 100, out = [];
     for (const p of data.props) {
       if (S.sport !== 'All' && p.sport !== S.sport) continue;
       for (const r of p.rungs) {
-        if (r.n < S.basis) continue;
+        if (S.basis === 's' ? !r.ns : r.n < S.basis) continue;
         for (const side of ['o', 'u']) {
           const { pW, pL } = PL.sideProbs(r, side);
           for (const bk of ['dk', 'fd']) {
@@ -108,7 +108,7 @@
         <td class="l">${PL.esc(bet)}</td><td class="l">${x.bk === 'dk' ? 'DraftKings' : 'FanDuel'}</td>
         <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
         <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
-        <td class="m">${x.r.n}</td>
+        <td class="m">${x.r.n}${x.r.ns ? ' · ' + x.r.ns + ' sharp' : ''}</td>
         <td class="m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) + ' · ' : ''}${PL.when(x.p.start)}</td></tr>`;
     }).join('');
   }

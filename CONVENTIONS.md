@@ -16,8 +16,9 @@ Standalone site, rhyman7.github.io/prop-ladder (GitHub Pages from `docs/`):
 - **Independent of fb-value-board.** No Odds API credits; nothing here changes
   the value boards.
 - **Refresh:** `.github/workflows/refresh.yml` runs `scripts/build.py`, which
-  writes `docs/data.json`. Manual only until Ryan picks a schedule. Caps per run
-  (events): NFL 16, NCAAF 25, NBA 15, NCAAB 20 — at most ~76 SGO objects.
+  writes `docs/data.json` (and `docs/wide/data.json`), then `scripts/track.py`.
+  Hourly during the Rookie trial. Caps per run (events): NFL 16, NCAAF 40,
+  NBA 15, NCAAB 40 (free plan: 25/20 for college).
 - **Allowance:** free plan, 2,500 objects a month. Ask Ryan before anything that
   would use most of it (a daily schedule does: ~2,300).
 
@@ -46,6 +47,23 @@ build with its own pages and its own play log, so the two stay comparable.
 The true probabilities are **untested** and the pages say so. Any
 change to the method follows the project's pre-set test rule once there is a
 logged history to test on (nothing logged yet).
+
+## Wide version (Rookie trial, Nov 24 - Dec 1, 2026)
+
+- Pinnacle is NOT on Rookie (Pro only, $299/mo; checked Nov 24). The trial
+  instead tests a wider, sharper consensus: `docs/wide/` (index, plays), built
+  from the same pull by `build.py`: the 9 books + SHARP_BOOKS (BookMaker,
+  BetOnline, LowVig, Novig, Prophet Exchange, Kalshi, Polymarket, Matchbook,
+  Betfair Exchange). Where any sharp book posts a rung, true probability = the
+  sharp books' median (`ns` on the rung); otherwise the wide median.
+- Own play log `data/wide_plays_log.json`, summary `docs/wide/results.json`.
+- Head-to-head `data/compare_log.json` -> `docs/compare.json`: every rung both
+  price where wide used sharp books; P(over) first and last before kickoff from
+  each; Brier and log loss once graded; difference with an SE clustered by prop.
+- Refresh is hourly during the trial. If Ryan cancels: see the header of
+  `.github/workflows/refresh.yml` (every 2 days, caps 25/20, BUILD_WIDE=0).
+- Decision at day 6 (Nov 30 - Dec 1) from the head-to-head; profit after a week
+  is noise and is not the yardstick.
 
 ## Results tracking
 
