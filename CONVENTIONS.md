@@ -6,6 +6,7 @@ Standalone site, rhyman7.github.io/prop-ladder (GitHub Pages from `docs/`):
   of every rung against DraftKings and FanDuel, with a profit-boost selector.
 - `plays.html` — All +EV plays: every rung and side where the true probability
   beats the book's implied probability, best edge first.
+- `results.html` — Results: how the logged All +EV plays did.
 
 ## Data
 
@@ -39,6 +40,20 @@ Standalone site, rhyman7.github.io/prop-ladder (GitHub Pages from `docs/`):
 The true probabilities are **untested** and the pages say so. Any
 change to the method follows the project's pre-set test rule once there is a
 logged history to test on (nothing logged yet).
+
+## Results tracking
+
+- `scripts/track.py` runs after `build.py` in the refresh. It logs every rung +
+  side + book (DK/FD) with edge > 0 and 2+ books, for games not yet started, at
+  its first sighting (`first_*`), and updates `last_*` (price and market true
+  probability) on every later refresh before kickoff.
+- Grading: SGO `score` on the prop's over odd once the game is final; null score
+  = void (did not play). $10 flat at the first price, no boost. About 1 SGO
+  object per finished game, at most 40 a run.
+- Log `data/plays_log.json` (never edited by hand); summary `docs/results.json`
+  for `results.html`: record, profit, ROI ± 1 SE, actual vs expected win rate,
+  CLV (last true prob − first price's implied), by edge, books, sport, book,
+  side and price.
 
 ## Other
 
