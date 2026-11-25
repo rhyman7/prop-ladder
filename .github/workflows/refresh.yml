@@ -46,6 +46,8 @@ jobs:
           SGO_SLEEP: "2"
           BUILD_WIDE: "1"
         run: python scripts/build.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Add Kalshi prices (public API, no key)
+        run: python scripts/kalshi.py | tee -a "$GITHUB_STEP_SUMMARY" || echo "Kalshi step failed; continuing without Kalshi"
       - name: Log and grade plays
         env:
           SGO_API_KEY: ${{ secrets.SGO_API_KEY }}

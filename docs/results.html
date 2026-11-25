@@ -162,7 +162,7 @@
     const day = new Date(r.start).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
     const bet = (r.side === 'o' ? 'Over ' : 'Under ') + r.line + ' ' + r.statLabel.toLowerCase();
     return `<tr><td class="l m">${day}</td><td class="l b">${PL.esc(r.player)} <span class="m" style="font-weight:400">${PL.esc(r.team || '')}</span></td>
-      <td class="l">${PL.esc(bet)}</td><td class="l">${r.book === 'dk' ? 'DraftKings' : 'FanDuel'}</td><td class="b">${PL.fmtOdds(r.first_odds)}</td>
+      <td class="l">${PL.esc(bet)}</td><td class="l">${({ dk: 'DraftKings', fd: 'FanDuel', ka: 'Kalshi' })[r.book]}</td><td class="b">${PL.fmtOdds(r.first_odds)}</td>
       <td>${PL.pct(r.first_true)}</td><td class="pos">${PL.signedPct(r.first_edge)}</td><td class="m">${r.first_books}</td>
       <td class="m">${r.last_odds != null ? PL.fmtOdds(r.last_odds) : '—'}</td><td><span class="res ${r.result}">${r.result}</span></td>
       <td class="m">${r.actual ?? '—'}</td><td class="${cls(r.profit)}">${r.result === 'void' ? '—' : money(r.profit)}</td></tr>`;

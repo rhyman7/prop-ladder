@@ -9,11 +9,11 @@
 <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-<div class="wrap">
+<div class="wrap full">
   <header>
     <div>
       <h1>Prop Ladder <span class="tag dark" style="font-size:14px;vertical-align:middle">Wide</span></h1>
-      <p class="sub">Trial version: 9 books plus sharper books and exchanges. Where a sharp book prices a rung, the true probability comes from the sharp books alone.</p>
+      <p class="sub">True probability for every rung, from the whole market with the vig removed, against DraftKings, FanDuel and Kalshi.</p>
     </div>
     <div class="hdr-right">
       <nav aria-label="Pages"><a href="index.html" aria-current="page">Prop Ladder</a><a href="plays.html">All +EV plays</a></nav>
@@ -35,11 +35,12 @@
 
   <section class="card tbl" aria-label="Ladder">
     <div class="scroll">
-      <table>
+      <table class="fit">
         <thead><tr id="head">
           <th scope="col" class="l" data-k="rung" data-first="asc">Rung</th><th scope="col" data-k="p">True prob</th><th scope="col" data-k="fair">Fair odds</th><th scope="col" class="sep" data-k="n">Books</th>
           <th scope="col" data-k="dkPrice">DK price</th><th scope="col" data-k="dkBe">DK implied</th><th scope="col" data-k="dkEdge">DK edge</th><th scope="col" class="sep" data-k="dkEv">DK EV / $10</th>
-          <th scope="col" data-k="fdPrice">FD price</th><th scope="col" data-k="fdBe">FD implied</th><th scope="col" data-k="fdEdge">FD edge</th><th scope="col" data-k="fdEv">FD EV / $10</th>
+          <th scope="col" data-k="fdPrice">FD price</th><th scope="col" data-k="fdBe">FD implied</th><th scope="col" data-k="fdEdge">FD edge</th><th scope="col" class="sep" data-k="fdEv">FD EV / $10</th>
+          <th scope="col" class="wr" data-k="kaPrice">Kalshi (after fee)</th><th scope="col" data-k="kaEdge">Kalshi edge</th><th scope="col" data-k="kaEv">Kalshi EV / $10</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -50,6 +51,7 @@
     <span><span class="sw" style="background:#DBEAFE;border:1px solid #1D4ED8"></span>+EV at that book</span>
     <span><span class="sw" style="background:#FFEDD5;border:1px solid #C2410C"></span>Edge worse than −3%</span>
     <span>Edge = true prob − book implied (after the boost). Shaded row = anchor line. — = not offered.</span>
+    <span>Kalshi (NFL and NBA only): price = the ask plus Kalshi's taker fee. If the player doesn't play, Kalshi settles No: Overs lose, Unders win. Profit boosts don't apply to Kalshi.</span>
     <span>Books = how many books' prices (vig removed) make that rung's true probability. Grey = one book only.</span>
   </footer>
 </div>
@@ -103,20 +105,20 @@
 
     const prop = forPlayer.find((p) => p.stat === S.stat);
     history.replaceState(null, '', '#' + new URLSearchParams({ sport: S.sport || '', team: S.team || '', pid: S.pid || '', stat: S.stat || '', side: S.side, boost: S.boost }).toString());
-    if (!prop) { $('facts').innerHTML = ''; $('rows').innerHTML = '<tr><td class="l" colspan="12">No props for this pick.</td></tr>'; return; }
+    if (!prop) { $('facts').innerHTML = ''; $('rows').innerHTML = '<tr><td class="l" colspan="15">No props for this pick.</td></tr>'; return; }
     table(prop);
   }
 
   function table(prop) {
     const B = S.boost / 100, side = S.side, a = prop.anchor;
     let best = null;
-    const rows = prop.rungs.filter((r) => r['dk' + side] != null || r['fd' + side] != null).map((r) => {
+    const rows = prop.rungs.filter((r) => r['dk' + side] != null || r['fd' + side] != null || r['ka' + side] != null).map((r) => {
       const { pW, pL } = PL.sideProbs(r, side);
       const pTrue = pW / Math.max(pW + pL, 1e-9);
       const k = { rung: side === 'o' ? r.l : -r.l, p: pTrue, fair: pTrue, n: r.n };
       const cells = ['dk', 'fd'].map((bk) => {
         const odds = r[bk + side];
-        const sep = bk === 'dk' ? ' sep' : '';
+        const sep = ' sep';
         if (odds == null) return `<td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na${sep}">—</td>`;
         const x = PL.price(odds, pW, pL, B);
         Object.assign(k, { [bk + 'Price']: PL.payout(odds), [bk + 'Be']: x.be, [bk + 'Edge']: x.edge, [bk + 'Ev']: x.ev });
@@ -124,10 +126,21 @@
         const cls = x.edge > 0 ? 'plus' : x.edge < -0.03 ? 'minus' : '';
         return `<td class="b">${PL.fmtOdds(odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="${cls}">${PL.signedPct(x.edge)}</td><td class="${cls}${sep}">${PL.money(x.ev)}</td>`;
       });
-      return { k, html: `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m">${PL.fair(pTrue)}</td><td class="m sep${r.n < 2 ? ' na' : ''}">${r.n}${r.sf ? ' · ' + r.ns + ' sharp' : ''}</td>${cells[0]}${cells[1]}</tr>` };
+      // Kalshi: price already includes its taker fee; profit boosts don't apply
+      const ko = r['ka' + side], kc = r['kp' + side];
+      let kcells = '<td class="na">—</td><td class="na">—</td><td class="na">—</td>';
+      if (ko != null) {
+        const x = PL.price(ko, pW, pL, 0);
+        Object.assign(k, { kaPrice: PL.payout(ko), kaEdge: x.edge, kaEv: x.ev });
+        if (x.ev > 0 && (!best || x.ev > best.ev)) best = { ...x, odds: ko, bk: 'ka', label: PL.rungLabel(r.l, side) };
+        const cls = x.edge > 0 ? 'plus' : x.edge < -0.03 ? 'minus' : '';
+        kcells = `<td class="b">${PL.fmtOdds(ko)}<span class="sub2">${side === 'o' ? 'Yes' : 'No'} ${kc}¢</span></td><td class="${cls}">${PL.signedPct(x.edge)}</td><td class="${cls}">${PL.money(x.ev)}</td>`;
+      }
+      cells.push(kcells);
+      return { k, html: `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m">${PL.fair(pTrue)}</td><td class="m sep${r.n < 2 ? ' na' : ''}">${r.n}${r.sf ? ' · ' + r.ns + ' sharp' : ''}</td>${cells[0]}${cells[1]}${cells[2]}</tr>` };
     });
     PL.sortHeaders($('head'), S, () => table(prop));
-    $('rows').innerHTML = PL.sortRows(rows, S.sort).map((x) => x.html).join('') || '<tr><td class="l" colspan="12">Neither book offers this side.</td></tr>';
+    $('rows').innerHTML = PL.sortRows(rows, S.sort).map((x) => x.html).join('') || '<tr><td class="l" colspan="15">Neither book offers this side.</td></tr>';
     const curveTxt = data.source === 'wide'
       ? `Each book's vig removed; rungs 2+ sharp books price use the sharp books' median, the rest the median of all ${prop.books} books`
       : `Every rung: each of ${prop.books} books' vig removed, median of the books posting it`;
@@ -139,7 +152,7 @@
       <div class="card fact"><span class="lbl">Source</span><span><span class="tag dark">${data.source === 'wide' ? 'Wide · sharp first' : 'Consensus'}</span> <span class="tag">${PL.esc(vs)}</span></span>
         <span class="small">${PL.esc(curveTxt)} · ${PL.when(prop.start)} ET</span></div>
       <div class="card fact"><span class="lbl">Best bet on this ladder</span>
-        <span class="big ${best ? 'good' : ''}">${best ? best.label + ' at ' + (best.bk === 'dk' ? 'DraftKings' : 'FanDuel') + ' ' + PL.fmtOdds(best.odds) : 'No +EV rung'}</span>
+        <span class="big ${best ? 'good' : ''}">${best ? best.label + ' at ' + ({ dk: 'DraftKings', fd: 'FanDuel', ka: 'Kalshi' })[best.bk] + ' ' + PL.fmtOdds(best.odds) : 'No +EV rung'}</span>
         <span class="small">${best ? 'Edge ' + PL.signedPct(best.edge) + ', EV ' + PL.money(best.ev) + ' per $10' + (S.boost ? ' with the boost' : '') : 'Try the other side or a profit boost'}</span></div>`;
   }
 

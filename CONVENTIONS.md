@@ -80,6 +80,19 @@ logged history to test on (nothing logged yet).
 - Decision at day 6 (Nov 30 - Dec 1) from the head-to-head; profit after a week
   is noise and is not the yardstick.
 
+## Kalshi (added Nov 25, 2026)
+
+- `scripts/kalshi.py` runs after `build.py`: Kalshi's public API (no key, works
+  on any SGO plan) for NFL and NBA player-prop ladders (no college player props
+  on Kalshi). Matched to our rungs by sport, stat (`SERIES` map), normalized
+  player name, game date (ET) and exact line. Stored per rung: `kao`/`kau`
+  American odds AFTER the taker fee (0.07 x P x (1-P)), `kpo`/`kpu` the ask in
+  cents. Kalshi is a place to bet here, not a true-probability source (the Wide
+  version still uses SGO's two-sided Kalshi quotes as a sharp source).
+- No profit boosts on Kalshi. Settlement: on non-Protected markets a player who
+  doesn't play resolves NO (Over loses, Under wins); track.py grades `ka` plays
+  that way, while DK/FD bets on a DNP are void.
+
 ## Results tracking
 
 - `scripts/track.py` runs after `build.py` in the refresh. It logs every rung +
@@ -96,7 +109,8 @@ logged history to test on (nothing logged yet).
 
 ## Other
 
-- Ryan bets only DraftKings and FanDuel, $10 units, with profit boosts.
+- Ryan bets DraftKings and FanDuel ($10 units, with profit boosts) and, from
+  Nov 25, 2026, Kalshi (asked for; check it is available in his state).
 - Coverage and fairOdds checks: `scripts/coverage_test.py`,
   `scripts/fairodds_check.py` (manual Actions, reports in `coverage/`).
 - Mockup: Prop Ladder design canvas on claude.ai (Nov 24, 2026).

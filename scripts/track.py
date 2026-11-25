@@ -72,7 +72,7 @@ def log_plays(log, data):
         for r in p["rungs"]:
             for side in ("o", "u"):
                 pw = r["po"] if side == "o" else r["pu"]
-                for bk in ("dk", "fd"):
+                for bk in ("dk", "fd", "ka"):
                     key = f'{p["game"]}|{p["pid"]}|{p["stat"]}|{r["l"]}|{side}|{bk}'
                     odds = r.get(bk + side)
                     row = log.get(key)
@@ -136,7 +136,7 @@ def final_score(ev, pid, stat):
         return "wait", None
     o = (ev.get("odds") or {}).get(f"{stat}-{pid}-game-ou-over") or {}
     if o.get("score") is None:
-        return ("void", None) if stt.get("finalized") else ("wait", None)
+        return ("dnp", None) if stt.get("finalized") else ("wait", None)
     return "final", float(o["score"])
 
 
@@ -148,12 +148,16 @@ def grade(log, evs, now):
         state, score = final_score(evs[row["game"]], row["pid"], row["stat"])
         if state == "wait":
             continue
-        if state == "void":
+        if state == "void" or (state == "dnp" and row["book"] != "ka"):
             row.update(status="void", result="void", actual=None, graded_at=now.isoformat(timespec="seconds"))
             graded += 1
             continue
         ln = float(row["line"])
-        res = "push" if score == ln else "win" if (score > ln) == (row["side"] == "o") else "loss"
+        if state == "dnp":
+            # Kalshi (non-Protected): a player who doesn't play resolves NO
+            res = "loss" if row["side"] == "o" else "win"
+        else:
+            res = "push" if score == ln else "win" if (score > ln) == (row["side"] == "o") else "loss"
         pr = profit10(row["first_odds"])
         row.update(status="graded", result=res, actual=score, graded_at=now.isoformat(timespec="seconds"),
                    profit=round(pr if res == "win" else -10.0 if res == "loss" else 0.0, 2))
@@ -200,7 +204,7 @@ def grade_compare(compare, evs):
         state, score = final_score(evs[game], pid, stat)
         if state == "wait":
             continue
-        c["r"] = "v" if state == "void" else (1 if score > float(line) else 0)
+        c["r"] = "v" if state in ("void", "dnp") else (1 if score > float(line) else 0)
         n += 1
     return n
 
@@ -296,7 +300,7 @@ def build_results(log, now):
         "Edge when first flagged": lambda r: bucket_edge(r["first_edge"]),
         "Books behind true prob": lambda r: str(r["first_books"]) if r["first_books"] < 4 else "4+",
         "Sport": lambda r: r["sport"],
-        "Book": lambda r: "DraftKings" if r["book"] == "dk" else "FanDuel",
+        "Book": lambda r: {"dk": "DraftKings", "fd": "FanDuel", "ka": "Kalshi"}[r["book"]],
         "Side": lambda r: "Over" if r["side"] == "o" else "Under",
         "Price": lambda r: bucket_price(r["first_odds"]),
     }

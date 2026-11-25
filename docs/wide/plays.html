@@ -50,6 +50,7 @@
 
   <footer class="legend">
     <span>Edge = true prob − book implied (after the boost). Click a player for the full ladder.</span>
+    <span>Kalshi (NFL and NBA only): price includes Kalshi's taker fee; no boosts. If the player doesn't play, Kalshi settles No: Overs lose.</span>
     <span>True prob = median of the books posting that rung, each with its own vig removed. Untested so far: logging results will show how well it holds.</span>
   </footer>
 </div>
@@ -107,7 +108,7 @@
       if (S.team && !teams.includes(S.team)) S.team = '';
       $('team').innerHTML = '<option value="">All teams</option>' + teams.map((t) => `<option value="${PL.esc(t)}"${t === S.team ? ' selected' : ''}>${PL.esc(t)}</option>`).join('');
     }
-    pills($('books'), 'book', [['Both', 'Both'], ['dk', 'DK'], ['fd', 'FD']]);
+    pills($('books'), 'book', [['Both', 'All'], ['dk', 'DK'], ['fd', 'FD'], ['ka', 'Kalshi']]);
     pills($('mins'), 'min', [[0, 'Any'], [1, '1%+'], [2, '2%+'], [3, '3%+']]);
     pills($('basis'), 'basis', [[1, 'Any'], [2, '2+'], [3, '3+'], [4, '4+']].concat(data.source === 'wide' ? [['s', 'Sharp-priced']] : []));
     pills($('boosts'), 'boost', PL.BOOSTS.map((b) => [b, b ? b + '%' : 'None']));
@@ -120,11 +121,11 @@
         if (S.basis === 's' ? !r.sf : r.n < S.basis) continue;
         for (const side of ['o', 'u']) {
           const { pW, pL } = PL.sideProbs(r, side);
-          for (const bk of ['dk', 'fd']) {
+          for (const bk of ['dk', 'fd', 'ka']) {
             if (S.book !== 'Both' && S.book !== bk) continue;
             const odds = r[bk + side];
             if (odds == null || !priceOk(odds)) continue;
-            const x = PL.price(odds, pW, pL, B);
+            const x = PL.price(odds, pW, pL, bk === 'ka' ? 0 : B);   // no boosts on Kalshi
             if (x.edge > S.min / 100 && x.edge > 0) {
               out.push({ p, r, side, bk, odds, ...x, k: { edge: x.edge, player: p.player, bet: p.statLabel + ' ' + (side === 'o' ? 'O' : 'U') + String(r.l).padStart(6, '0'),
                 book: bk, price: PL.payout(odds), be: x.be, p: x.pTrue, ev: x.ev, n: r.n, game: p.start || '' } });
@@ -143,7 +144,7 @@
       const bet = (x.side === 'o' ? 'Over ' : 'Under ') + x.r.l + ' ' + x.p.statLabel.toLowerCase() + ' (' + PL.rungLabel(x.r.l, x.side) + ')';
       return `<tr><td><span class="chip">${PL.signedPct(x.edge)}</span></td>
         <td class="l wr"><a class="b" style="color:#111827" href="${link}">${PL.esc(x.p.player)}</a> <span class="m">${PL.esc(x.p.team || '')}</span></td>
-        <td class="l wr">${PL.esc(bet)}</td><td class="l">${x.bk === 'dk' ? 'DraftKings' : 'FanDuel'}</td>
+        <td class="l wr">${PL.esc(bet)}</td><td class="l">${({ dk: 'DraftKings', fd: 'FanDuel', ka: 'Kalshi' })[x.bk]}${x.bk === 'ka' ? `<span class="sub2">${x.side === 'o' ? 'Yes' : 'No'} ${x.r['kp' + x.side]}¢ + fee</span>` : ''}</td>
         <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
         <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
         <td class="m">${x.r.n}${x.r.sf ? ' · ' + x.r.ns + ' sharp' : ''}</td>
