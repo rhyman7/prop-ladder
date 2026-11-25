@@ -35,10 +35,10 @@
   <section class="card tbl" aria-label="Plays">
     <div class="scroll">
       <table>
-        <thead><tr>
-          <th scope="col">Edge</th><th scope="col" class="l">Player</th><th scope="col" class="l">Bet</th><th scope="col" class="l">Book</th>
-          <th scope="col">Price</th><th scope="col">Book implied</th><th scope="col">True prob</th><th scope="col">EV / $10</th>
-          <th scope="col">Books</th><th scope="col">Game</th>
+        <thead><tr id="head">
+          <th scope="col" data-k="edge">Edge</th><th scope="col" class="l" data-k="player" data-first="asc">Player</th><th scope="col" class="l" data-k="bet" data-first="asc">Bet</th><th scope="col" class="l" data-k="book" data-first="asc">Book</th>
+          <th scope="col" data-k="price">Price</th><th scope="col" data-k="be">Book implied</th><th scope="col" data-k="p">True prob</th><th scope="col" data-k="ev">EV / $10</th>
+          <th scope="col" data-k="n">Books</th><th scope="col" data-k="game" data-first="asc">Game</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -58,7 +58,7 @@
   let data;
   try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
   $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'wide' ? ' · wide (sharp first)' : ' · consensus');
-  const S = { sport: 'All', book: 'Both', min: 0, basis: 2, boost: 0 };
+  const S = { sport: 'All', book: 'Both', min: 0, basis: 2, boost: 0, sort: { key: 'edge', dir: 'desc' } };
   const games = new Map(data.games.map((g) => [g.id, g]));
   const MAX_ROWS = 300;
 
@@ -91,15 +91,19 @@
             const odds = r[bk + side];
             if (odds == null) continue;
             const x = PL.price(odds, pW, pL, B);
-            if (x.edge > S.min / 100 && x.edge > 0) out.push({ p, r, side, bk, odds, ...x });
+            if (x.edge > S.min / 100 && x.edge > 0) {
+              out.push({ p, r, side, bk, odds, ...x, k: { edge: x.edge, player: p.player, bet: p.statLabel + ' ' + (side === 'o' ? 'O' : 'U') + String(r.l).padStart(6, '0'),
+                book: bk, price: PL.payout(odds), be: x.be, p: x.pTrue, ev: x.ev, n: r.n, game: p.start || '' } });
+            }
           }
         }
       }
     }
-    out.sort((a, b) => b.edge - a.edge);
+    PL.sortHeaders($('head'), S, render);
+    const sorted = PL.sortRows(out, S.sort);
     $('count').textContent = out.length + (out.length === 1 ? ' play' : ' plays') + (S.boost ? ` with a ${S.boost}% boost` : '') + (out.length > MAX_ROWS ? ` (showing the top ${MAX_ROWS})` : '');
     $('empty').hidden = out.length > 0;
-    $('rows').innerHTML = out.slice(0, MAX_ROWS).map((x) => {
+    $('rows').innerHTML = sorted.slice(0, MAX_ROWS).map((x) => {
       const g = games.get(x.p.game);
       const link = 'index.html#' + new URLSearchParams({ sport: x.p.sport, team: x.p.teamName || '', pid: x.p.pid, stat: x.p.stat, side: x.side, boost: S.boost }).toString();
       const bet = (x.side === 'o' ? 'Over ' : 'Under ') + x.r.l + ' ' + x.p.statLabel.toLowerCase() + ' (' + PL.rungLabel(x.r.l, x.side) + ')';

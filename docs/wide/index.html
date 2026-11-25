@@ -36,10 +36,10 @@
   <section class="card tbl" aria-label="Ladder">
     <div class="scroll">
       <table>
-        <thead><tr>
-          <th scope="col" class="l">Rung</th><th scope="col">True prob</th><th scope="col">Fair odds</th><th scope="col" class="sep">Books</th>
-          <th scope="col">DK price</th><th scope="col">DK implied</th><th scope="col">DK edge</th><th scope="col" class="sep">DK EV / $10</th>
-          <th scope="col">FD price</th><th scope="col">FD implied</th><th scope="col">FD edge</th><th scope="col">FD EV / $10</th>
+        <thead><tr id="head">
+          <th scope="col" class="l" data-k="rung" data-first="asc">Rung</th><th scope="col" data-k="p">True prob</th><th scope="col" data-k="fair">Fair odds</th><th scope="col" class="sep" data-k="n">Books</th>
+          <th scope="col" data-k="dkPrice">DK price</th><th scope="col" data-k="dkBe">DK implied</th><th scope="col" data-k="dkEdge">DK edge</th><th scope="col" class="sep" data-k="dkEv">DK EV / $10</th>
+          <th scope="col" data-k="fdPrice">FD price</th><th scope="col" data-k="fdBe">FD implied</th><th scope="col" data-k="fdEdge">FD edge</th><th scope="col" data-k="fdEv">FD EV / $10</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -62,7 +62,7 @@
   $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'wide' ? ' · wide (sharp first)' : ' · consensus');
   const props = data.props;
   const h = new URLSearchParams(location.hash.slice(1));
-  const S = { sport: h.get('sport'), team: h.get('team'), pid: h.get('pid'), stat: h.get('stat'), side: h.get('side') || 'o', boost: +(h.get('boost') || 0) };
+  const S = { sport: h.get('sport'), team: h.get('team'), pid: h.get('pid'), stat: h.get('stat'), side: h.get('side') || 'o', boost: +(h.get('boost') || 0), sort: { key: 'rung', dir: 'asc' } };
 
   const uniq = (xs) => [...new Set(xs)];
   function pills(el, items, cur, onPick) {
@@ -113,18 +113,21 @@
     const rows = prop.rungs.filter((r) => r['dk' + side] != null || r['fd' + side] != null).map((r) => {
       const { pW, pL } = PL.sideProbs(r, side);
       const pTrue = pW / Math.max(pW + pL, 1e-9);
+      const k = { rung: side === 'o' ? r.l : -r.l, p: pTrue, fair: pTrue, n: r.n };
       const cells = ['dk', 'fd'].map((bk) => {
         const odds = r[bk + side];
         const sep = bk === 'dk' ? ' sep' : '';
         if (odds == null) return `<td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na${sep}">—</td>`;
         const x = PL.price(odds, pW, pL, B);
+        Object.assign(k, { [bk + 'Price']: PL.payout(odds), [bk + 'Be']: x.be, [bk + 'Edge']: x.edge, [bk + 'Ev']: x.ev });
         if (x.ev > 0 && (!best || x.ev > best.ev)) best = { ...x, odds, bk, label: PL.rungLabel(r.l, side) };
         const cls = x.edge > 0 ? 'plus' : x.edge < -0.03 ? 'minus' : '';
         return `<td class="b">${PL.fmtOdds(odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="${cls}">${PL.signedPct(x.edge)}</td><td class="${cls}${sep}">${PL.money(x.ev)}</td>`;
       });
-      return `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m">${PL.fair(pTrue)}</td><td class="m sep${r.n < 2 ? ' na' : ''}">${r.n}${r.sf ? ' · ' + r.ns + ' sharp' : ''}</td>${cells[0]}${cells[1]}</tr>`;
+      return { k, html: `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m">${PL.fair(pTrue)}</td><td class="m sep${r.n < 2 ? ' na' : ''}">${r.n}${r.sf ? ' · ' + r.ns + ' sharp' : ''}</td>${cells[0]}${cells[1]}</tr>` };
     });
-    $('rows').innerHTML = rows.join('') || '<tr><td class="l" colspan="12">Neither book offers this side.</td></tr>';
+    PL.sortHeaders($('head'), S, () => table(prop));
+    $('rows').innerHTML = PL.sortRows(rows, S.sort).map((x) => x.html).join('') || '<tr><td class="l" colspan="12">Neither book offers this side.</td></tr>';
     const curveTxt = data.source === 'wide'
       ? `Each book's vig removed; rungs 2+ sharp books price use the sharp books' median, the rest the median of all ${prop.books} books`
       : `Every rung: each of ${prop.books} books' vig removed, median of the books posting it`;
