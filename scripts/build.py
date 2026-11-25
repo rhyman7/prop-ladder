@@ -38,6 +38,11 @@ CAPS = {
 }
 SPORT_LABEL = {"NFL": "NFL", "NCAAF": "CFB", "NBA": "NBA", "NCAAB": "NCAAB"}
 BOOKS = {"draftkings": "dk", "fanduel": "fd"}
+# The consensus uses ONLY the 9 books the free plan returned (Nov 24, 2026), so
+# upgrading the key (e.g. a Rookie trial with Pinnacle and 70+ more books) does
+# not change this page's method. A Pinnacle version must be a separate build.
+FREE_BOOKS = {"draftkings", "fanduel", "caesars", "betmgm", "bovada", "espnbet",
+              "pointsbet", "unibet", "williamhill"}
 TEAM_ENTITIES = {"home", "away", "all"}
 
 # Assumed coefficient of variation (sd / mean) per stat. STARTING VALUES, NOT
@@ -251,8 +256,8 @@ def build_prop(o, u):
     removed from every rung it posts (power method); a rung's true probability
     is the median across the books posting it."""
     ob, ub = o.get("byBookmaker") or {}, u.get("byBookmaker") or {}
-    oq_all = {b: quotes(q) for b, q in ob.items()}
-    uq_all = {b: quotes(q) for b, q in ub.items()}
+    oq_all = {b: quotes(q) for b, q in ob.items() if b in FREE_BOOKS}
+    uq_all = {b: quotes(q) for b, q in ub.items() if b in FREE_BOOKS}
     if not any(oq_all.get(b) or uq_all.get(b) for b in BOOKS):
         return None
     a = anchor(o, oq_all, uq_all)
@@ -302,7 +307,7 @@ def main():
         sys.exit("SGO_API_KEY is not set")
     now = datetime.now(timezone.utc)
     out = {"pulledAt": now.isoformat(timespec="seconds"), "source": SOURCE, "games": [], "props": [],
-           "method": "market-ladder"}
+           "method": "market-ladder", "books": sorted(FREE_BOOKS)}
     meta_sample = None
     used = 0
     raw = []

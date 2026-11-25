@@ -23,6 +23,11 @@ Standalone site, rhyman7.github.io/prop-ladder (GitHub Pages from `docs/`):
 
 ## How the true probability is made
 
+**Locked to the free plan's 9 books** (`FREE_BOOKS` in `build.py`: DraftKings,
+FanDuel, Caesars, BetMGM, Bovada, ESPN BET, PointsBet, Unibet, William Hill),
+whatever plan the key is on. A Pinnacle / paid-plan version must be a separate
+build with its own pages and its own play log, so the two stay comparable.
+
 1. **Anchor:** the line the most books quote on both sides (ties: nearest 50%);
    each book's simple vig removal, median. A one-book anchor is flagged on the
    pages. SGO's own `fairOdds` is NOT used: where books' main lines differ it can
