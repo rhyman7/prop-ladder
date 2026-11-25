@@ -46,13 +46,13 @@
   <section class="grid2" id="groups" aria-label="Breakdowns"></section>
 
   <section class="card tbl" aria-label="Graded plays">
-    <h2 class="cardhead" style="padding-bottom:12px">Graded plays</h2>
+    <h2 class="cardhead" style="padding-bottom:12px">Graded plays (latest 400; click a header to sort)</h2>
     <div class="scroll">
       <table>
-        <thead><tr>
-          <th scope="col" class="l">Game day</th><th scope="col" class="l">Player</th><th scope="col" class="l">Bet</th><th scope="col" class="l">Book</th>
-          <th scope="col">Price</th><th scope="col">True prob</th><th scope="col">Edge</th><th scope="col">Books</th>
-          <th scope="col">Last price</th><th scope="col">Result</th><th scope="col">Actual</th><th scope="col">Profit</th>
+        <thead><tr id="phead">
+          <th scope="col" class="l" data-k="day">Game day</th><th scope="col" class="l" data-k="player" data-first="asc">Player</th><th scope="col" class="l" data-k="bet" data-first="asc">Bet</th><th scope="col" class="l" data-k="book" data-first="asc">Book</th>
+          <th scope="col" data-k="price">Price</th><th scope="col" data-k="p">True prob</th><th scope="col" data-k="edge">Edge</th><th scope="col" data-k="n">Books</th>
+          <th scope="col" data-k="last">Last price</th><th scope="col" class="l" data-k="result" data-first="asc">Result</th><th scope="col" data-k="actual">Actual</th><th scope="col" data-k="profit">Profit</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -80,14 +80,20 @@
       const verdict = !L ? 'No compared rungs graded yet.' : L.diffSE == null ? 'Too few props graded to judge.'
         : Math.abs(L.diff) < 1.96 * L.diffSE ? 'No clear winner yet: the gap is within the margin of error.'
         : (L.diff < 0 ? 'Wide is more accurate' : '9-book is more accurate') + ' (beyond 2 standard errors).';
-      const row = (s) => `<tr><th class="l b" scope="row">${s.sport || 'All'}</th><td>${s.props}</td><td>${s.rungs}</td><td>${s.brier9.toFixed(4)}</td><td>${s.brierWide.toFixed(4)}</td>
+      const row = (s) => `<tr class="${s.sport ? '' : 'anchor'}"><th class="l b" scope="row">${s.sport || 'All'}</th><td>${s.props}</td><td>${s.rungs}</td><td>${s.brier9.toFixed(4)}</td><td>${s.brierWide.toFixed(4)}</td>
         <td class="${s.diff < 0 ? 'pos' : s.diff > 0 ? 'neg' : ''}">${(s.diff >= 0 ? '+' : '−') + Math.abs(s.diff).toFixed(4)}${s.diffSE ? ' <span class="m" style="font-weight:400">± ' + s.diffSE.toFixed(4) + '</span>' : ''}</td><td class="m">${(s.meanGap * 100).toFixed(1)} pts</td></tr>`;
       $('h2h').hidden = false;
       $('h2h').innerHTML = `<h2 class="cardhead">Head-to-head: which true probability is more accurate?</h2>
         <p class="small" style="margin:6px 16px 0">${H.tracked} rungs where the Wide version used 2+ sharp books · ${H.pending} waiting on games. Scored at the last refresh before kickoff (Brier: lower is better).</p>
         <p class="b" style="margin:8px 16px 4px;font-size:15px">${verdict}</p>
-        ${L ? `<div class="scroll"><table class="compact"><thead><tr><th class="l" scope="col">Sport</th><th scope="col">Props</th><th scope="col">Rungs</th><th scope="col">Brier 9-book</th><th scope="col">Brier Wide</th><th scope="col">Wide − 9-book</th><th scope="col">Avg gap</th></tr></thead>
-        <tbody>${row(L)}${(H.bySport || []).map(row).join('')}</tbody></table></div>` : ''}`;
+        ${L ? `<div class="scroll"><table class="compact"><thead><tr id="hhead"><th class="l" scope="col" data-k="ord" data-first="asc">Sport</th><th scope="col" data-k="props">Props</th><th scope="col" data-k="rungs">Rungs</th><th scope="col" data-k="b9">Brier 9-book</th><th scope="col" data-k="bw">Brier Wide</th><th scope="col" data-k="diff">Wide − 9-book</th><th scope="col" data-k="gap">Avg gap</th></tr></thead>
+        <tbody id="hrows"></tbody></table></div>` : ''}`;
+      if (L) {
+        const hrows = [L, ...(H.bySport || [])].map((x, i) => ({ k: { ord: i, props: x.props, rungs: x.rungs, b9: x.brier9, bw: x.brierWide, diff: x.diff, gap: x.meanGap }, html: row(x) }));
+        const HS = { sort: { key: 'ord', dir: 'asc' } };
+        const drawH = () => { PL.sortHeaders($('hhead'), HS, drawH); $('hrows').innerHTML = PL.sortRows(hrows, HS.sort).map((x) => x.html).join(''); };
+        drawH();
+      }
     }
   } catch (e) {}
   let R;
@@ -129,17 +135,30 @@
     $('chart').innerHTML = '<p class="small" style="margin:0">The chart appears after two game days are graded.</p>';
   }
 
-  $('groups').innerHTML = (R.groups || []).filter((g) => g.rows.length).map((g) => `
+  const groups = (R.groups || []).filter((g) => g.rows.length);
+  $('groups').innerHTML = groups.map((g, gi) => `
     <div class="card tbl"><h2 class="cardhead" style="padding-bottom:8px">${g.name}</h2><div class="scroll"><table class="compact">
-      <thead><tr><th class="l" scope="col">Group</th><th scope="col">Plays</th><th scope="col">W-L</th><th scope="col">Win %</th><th scope="col">Exp.</th><th scope="col">Profit</th><th scope="col">ROI</th><th scope="col">CLV</th></tr></thead>
-      <tbody>${g.rows.map((s) => `<tr><th class="l b" scope="row">${PL.esc(s.label)}</th><td>${s.n}</td><td class="m">${s.w}-${s.l}${s.p ? '-' + s.p : ''}</td>
-        <td>${pctOr(s.winRate)}</td><td class="m">${pctOr(s.expWinRate)}</td><td class="${cls(s.profit)}">${money(s.profit)}</td><td class="${cls(s.roi)}">${roi(s)}</td><td class="${cls(s.clv)}">${PL.signedPct(s.clv)}</td></tr>`).join('')}</tbody>
+      <thead><tr id="ghead${gi}"><th class="l" scope="col" data-k="ord" data-first="asc">Group</th><th scope="col" data-k="n">Plays</th><th scope="col" data-k="w">W-L</th><th scope="col" data-k="win">Win %</th><th scope="col" data-k="exp">Exp.</th><th scope="col" data-k="profit">Profit</th><th scope="col" data-k="roi">ROI</th><th scope="col" data-k="clv">CLV</th></tr></thead>
+      <tbody id="grows${gi}"></tbody>
     </table></div></div>`).join('');
+  groups.forEach((g, gi) => {
+    const rows = g.rows.map((s, i) => ({ k: { ord: i, n: s.n, w: s.w, win: s.winRate, exp: s.expWinRate, profit: s.profit, roi: s.roi, clv: s.clv },
+      html: `<tr><th class="l b" scope="row">${PL.esc(s.label)}</th><td>${s.n}</td><td class="m">${s.w}-${s.l}${s.p ? '-' + s.p : ''}</td>
+        <td>${pctOr(s.winRate)}</td><td class="m">${pctOr(s.expWinRate)}</td><td class="${cls(s.profit)}">${money(s.profit)}</td><td class="${cls(s.roi)}">${roi(s)}</td><td class="${cls(s.clv)}">${PL.signedPct(s.clv)}</td></tr>` }));
+    const GS = { sort: { key: 'ord', dir: 'asc' } };
+    const draw = () => { PL.sortHeaders($('ghead' + gi), GS, draw); $('grows' + gi).innerHTML = PL.sortRows(rows, GS.sort).map((x) => x.html).join(''); };
+    draw();
+  });
 
   let shown = 50;
+  const PS = { sort: { key: 'day', dir: 'desc' } };
+  const plays = (R.recent || []).map((r) => ({ r, k: { day: r.start, player: r.player, bet: r.statLabel + ' ' + r.side + String(r.line).padStart(6, '0'),
+    book: r.book, price: PL.payout(r.first_odds), p: r.first_true, edge: r.first_edge, n: r.first_books,
+    last: r.last_odds != null ? PL.payout(r.last_odds) : null, result: r.result, actual: r.actual, profit: r.result === 'void' ? null : r.profit } }));
   const drawRows = () => {
-  $('more').hidden = (R.recent || []).length <= shown;
-  $('rows').innerHTML = (R.recent || []).slice(0, shown).map((r) => {
+  PL.sortHeaders($('phead'), PS, drawRows);
+  $('more').hidden = plays.length <= shown;
+  $('rows').innerHTML = PL.sortRows(plays, PS.sort).slice(0, shown).map(({ r }) => {
     const day = new Date(r.start).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
     const bet = (r.side === 'o' ? 'Over ' : 'Under ') + r.line + ' ' + r.statLabel.toLowerCase();
     return `<tr><td class="l m">${day}</td><td class="l b">${PL.esc(r.player)} <span class="m" style="font-weight:400">${PL.esc(r.team || '')}</span></td>
