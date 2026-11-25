@@ -1,23 +1,32 @@
 name: Refresh prices
 
-# Pulls upcoming NFL, NCAAF, NBA and NCAAB props from SportsGameOdds and
-# rebuilds docs/data.json, then logs and grades the +EV plays (track.py).
-# Cost: about 1 SGO object per event; the caps in scripts/build.py 
-# (16 + 25 + 15 + 20) keep the pull at 76 objects or fewer, and grading adds
-# about 1 per finished game with logged plays (at most 40 a run).
-# ROOKIE TRIAL (Nov 24 - Dec 1, 2026): hourly. One run = one pull (caps 16 +
-# 40 + 15 + 40 = 111 events) feeding BOTH versions, + grading (<= 40).
-# ~2,700 objects a day; Rookie allows 100,000 a month.
-# IF THE TRIAL IS CANCELLED: back to the free 2,500 a month -> change the cron
-# to every 2 days ("17 15 */2 * *") and set CAP_NCAAF/CAP_NCAAB back to 25/20
-# (~1,150 a month + grading), and set BUILD_WIDE=0 (no wide books on free).
+# Pulls upcoming NFL, NCAAF, NBA and NCAAB props from SportsGameOdds, rebuilds
+# docs/data.json (and docs/wide/data.json), then logs and grades the +EV plays.
+#
+# HOURLY, SELF-CHAINING: GitHub's cron fired only once in 12 hours on Nov 24-25,
+# so each run ends with a job that waits ~50 minutes and starts the next run
+# (workflow_dispatch from GITHUB_TOKEN is allowed to start runs). It starts the
+# next run only if no other refresh run is queued or running, so duplicate
+# chains die out. The cron below only revives the chain if it ever breaks.
+# STOP THE CHAIN: set repository variable REFRESH_CHAIN to "off"
+# (Settings > Secrets and variables > Actions > Variables).
+#
+# Cost (SGO objects, ~1 per event): a FULL run (whole week: NFL 7 days,
+# NCAAF 5, NBA/NCAAB 2; caps 20/90/30/80) every 6 hours, NEAR runs (next 30
+# hours only; farther games kept from the last full run) in between, plus
+# grading (<= 40 a run). Thanksgiving week: ~2,500-3,000 a day.
+# ROOKIE TRIAL (Nov 24 - Dec 1, 2026): Rookie allows 100,000 a month.
+# IF THE TRIAL IS CANCELLED (free: 2,500 a month): set REFRESH_CHAIN=off,
+# change the cron to every 2 days ("17 15 */2 * *"), FORCE_FULL "1",
+# CAP_NCAAF/CAP_NCAAB 25/20, SGO_SLEEP 7, BUILD_WIDE "0".
 on:
   workflow_dispatch:
   schedule:
-    - cron: "13 * * * *"   # hourly at :13 (off the busy top of the hour)
+    - cron: "13 */3 * * *"   # revives the chain if it breaks
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: refresh
@@ -34,6 +43,8 @@ jobs:
       - name: Build data.json
         env:
           SGO_API_KEY: ${{ secrets.SGO_API_KEY }}
+          SGO_SLEEP: "2"
+          BUILD_WIDE: "1"
         run: python scripts/build.py | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Log and grade plays
         env:
@@ -46,3 +57,21 @@ jobs:
           git add docs/data.json docs/results.json docs/compare.json docs/wide data/ coverage/meta_sample.json
           git commit -m "Refresh prices" || echo "nothing to commit"
           git pull --rebase -q && git push
+
+  next:
+    needs: refresh
+    if: ${{ always() && vars.REFRESH_CHAIN != 'off' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait, then start the next refresh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          sleep 2940
+          others=$(gh api "repos/$REPO/actions/workflows/refresh.yml/runs?per_page=20" \
+            --jq "[.workflow_runs[] | select(.id != $RUN_ID) | select(.status==\"queued\" or .status==\"in_progress\" or .status==\"waiting\" or .status==\"pending\")] | length")
+          if [ "$others" -gt 0 ]; then echo "another refresh is already queued or running; ending this chain"; exit 0; fi
+          gh workflow run refresh.yml --repo "$REPO" --ref main
+          echo "next refresh started"

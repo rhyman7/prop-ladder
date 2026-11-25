@@ -17,8 +17,13 @@ Standalone site, rhyman7.github.io/prop-ladder (GitHub Pages from `docs/`):
   the value boards.
 - **Refresh:** `.github/workflows/refresh.yml` runs `scripts/build.py`, which
   writes `docs/data.json` (and `docs/wide/data.json`), then `scripts/track.py`.
-  Hourly during the Rookie trial. Caps per run (events): NFL 16, NCAAF 40,
-  NBA 15, NCAAB 40 (free plan: 25/20 for college).
+  Hourly and self-chaining (GitHub's cron proved unreliable, Nov 25): each run
+  waits ~50 min and dispatches the next; repo variable `REFRESH_CHAIN=off`
+  stops it; a 3-hourly cron revives it. FULL run (NFL 7 days, NCAAF 5 days,
+  NBA/NCAAB 2 days; caps 20/90/30/80) every 6 hours; NEAR runs in between pull
+  only the next 30 hours and keep farther games from the last full run (each
+  game and prop carries `asOf`, its own pull time). Free-plan settings are in
+  the workflow header.
 - **Allowance:** free plan, 2,500 objects a month. Ask Ryan before anything that
   would use most of it (a daily schedule does: ~2,300).
 

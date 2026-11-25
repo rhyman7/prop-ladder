@@ -77,10 +77,13 @@ def log_plays(log, data):
                     odds = r.get(bk + side)
                     row = log.get(key)
                     if row and row["status"] == "pending":
-                        # refresh the "last before kickoff" view, flagged or not
+                        # refresh the "last before kickoff" view, flagged or not,
+                        # but only from a newer pull than the one already recorded
+                        if p.get("asOf", data["pulledAt"]) <= row["last_seen"]:
+                            continue
                         row["last_true"] = pw
                         row["last_books"] = r["n"]
-                        row["last_seen"] = data["pulledAt"]
+                        row["last_seen"] = p.get("asOf", data["pulledAt"])
                         if odds is not None:
                             row["last_odds"] = odds
                         updated += 1
@@ -94,9 +97,9 @@ def log_plays(log, data):
                         "key": key, "status": "pending", "sport": p["sport"], "game": p["game"], "start": p["start"],
                         "player": p["player"], "pid": p["pid"], "team": p.get("team"), "stat": p["stat"],
                         "statLabel": p["statLabel"], "line": r["l"], "side": side, "book": bk, "anchor": r["a"],
-                        "first_seen": data["pulledAt"], "first_odds": odds, "first_true": round(pw, 4),
+                        "first_seen": p.get("asOf", data["pulledAt"]), "first_odds": odds, "first_true": round(pw, 4),
                         "first_edge": round(edge, 4), "first_books": r["n"],
-                        "last_seen": data["pulledAt"], "last_odds": odds, "last_true": round(pw, 4), "last_books": r["n"],
+                        "last_seen": p.get("asOf", data["pulledAt"]), "last_odds": odds, "last_true": round(pw, 4), "last_books": r["n"],
                     }
                     added += 1
     return added, updated

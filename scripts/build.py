@@ -30,12 +30,18 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 SOURCE = "consensus"  # "pinnacle" once a paid key carries it
 
 # (max events per run, days ahead). About 1 SGO object per event.
+# FULL run: the whole betting week (days ahead). NEAR run: only games in the
+# next NEAR_HOURS; games outside that window are kept from the last full run.
+# A run is FULL when the last full one is FULL_EVERY_H or more hours old.
 CAPS = {
-    "NFL": (int(os.environ.get("CAP_NFL", 16)), 4),
-    "NCAAF": (int(os.environ.get("CAP_NCAAF", 40)), 3),
-    "NBA": (int(os.environ.get("CAP_NBA", 15)), 2),
-    "NCAAB": (int(os.environ.get("CAP_NCAAB", 40)), 2),
+    "NFL": (int(os.environ.get("CAP_NFL", 20)), 7),
+    "NCAAF": (int(os.environ.get("CAP_NCAAF", 90)), 5),
+    "NBA": (int(os.environ.get("CAP_NBA", 30)), 2),
+    "NCAAB": (int(os.environ.get("CAP_NCAAB", 80)), 2),
 }
+NEAR_HOURS = float(os.environ.get("NEAR_HOURS", 30))
+FULL_EVERY_H = float(os.environ.get("FULL_EVERY_H", 6))
+SLEEP = float(os.environ.get("SGO_SLEEP", 7))   # seconds between requests (free plan: 10/min)
 SPORT_LABEL = {"NFL": "NFL", "NCAAF": "CFB", "NBA": "NBA", "NCAAB": "NCAAB"}
 BOOKS = {"draftkings": "dk", "fanduel": "fd"}
 # The consensus uses ONLY the 9 books the free plan returned (Nov 24, 2026), so
@@ -160,17 +166,17 @@ def get(path, params):
             return {"success": False, "error": repr(e)}
 
 
-def pull(league, cap, days, now):
+def pull(league, cap, days, now, hours=None):
     iso = lambda d: d.isoformat(timespec="seconds").replace("+00:00", "Z")
     events, cursor = [], None
     while len(events) < cap:
         p = {"leagueID": league, "oddsAvailable": "true", "includeAltLines": "true",
-             "startsAfter": iso(now), "startsBefore": iso(now + timedelta(days=days)),
+             "startsAfter": iso(now), "startsBefore": iso(now + (timedelta(hours=hours) if hours else timedelta(days=days))),
              "limit": min(10, cap - len(events))}
         if cursor:
             p["cursor"] = cursor
         r = get("events", p)
-        time.sleep(7)  # free plan: 10 requests a minute
+        time.sleep(SLEEP)
         if "data" not in r:
             print(f"{league}: {r.get('error')}", file=sys.stderr)
             break
@@ -347,20 +353,31 @@ def main():
     if not KEY:
         sys.exit("SGO_API_KEY is not set")
     now = datetime.now(timezone.utc)
-    out = {"pulledAt": now.isoformat(timespec="seconds"), "source": SOURCE, "games": [], "props": [],
+    stamp = now.isoformat(timespec="seconds")
+    prev = {}
+    for key, path in (("9", "docs/data.json"), ("wide", "docs/wide/data.json")):
+        try:
+            with open(os.path.join(ROOT, path)) as f:
+                prev[key] = json.load(f)
+        except Exception:
+            prev[key] = None
+    last_full = (prev.get("9") or {}).get("lastFull")
+    full = os.environ.get("FORCE_FULL") == "1" or not last_full or \
+        (now - datetime.fromisoformat(last_full)).total_seconds() >= FULL_EVERY_H * 3600 - 600
+    out = {"pulledAt": stamp, "lastFull": stamp if full else last_full, "source": SOURCE, "games": [], "props": [],
            "method": "market-ladder", "books": sorted(FREE_BOOKS)}
     meta_sample = None
     used = 0
     raw = []
     for lg, (cap, days) in CAPS.items():
-        events = pull(lg, cap, days, now)
+        events = pull(lg, cap, days, now, None if full else NEAR_HOURS)
         used += len(events)
         for ev in events:
             teams = ev.get("teams") or {}
             home, away = team_info(teams.get("home") or {}), team_info(teams.get("away") or {})
             gid = ev.get("eventID")
             start = (ev.get("status") or {}).get("startsAt")
-            out["games"].append({"id": gid, "sport": SPORT_LABEL[lg], "start": start, "home": home, "away": away})
+            out["games"].append({"id": gid, "sport": SPORT_LABEL[lg], "start": start, "home": home, "away": away, "asOf": stamp})
             players = ev.get("players") or {}
             if meta_sample is None:
                 meta_sample = {"teams": teams, "status": ev.get("status"),
@@ -387,12 +404,26 @@ def main():
             tid = pl.get("teamID")
             team = home if tid == home["id"] else away if tid == away["id"] else {"id": tid, "name": tid, "abbr": tid}
             opp = away if team is home else home if team is away else None
-            prop.update({"sport": SPORT_LABEL[lg], "game": gid, "start": start,
+            prop.update({"sport": SPORT_LABEL[lg], "game": gid, "start": start, "asOf": stamp,
                          "player": pl.get("name") or (pl.get("firstName", "") + " " + pl.get("lastName", "")).strip() or pid,
                          "pid": pid, "team": team.get("abbr"), "teamName": team.get("name"),
                          "opp": opp.get("abbr") if opp else None})
             target["props"].append(prop)
+    # near run: keep games outside the window (still upcoming) from the last file
+    if not full:
+        horizon = now + timedelta(hours=NEAR_HOURS)
+        pulled = {g["id"] for g in out["games"]}
+        for key, target in (("9", out), ("wide", wide)):
+            old = prev.get(key) or {}
+            keep = {g["id"] for g in old.get("games", []) if g["id"] not in pulled and g.get("start")
+                    and datetime.fromisoformat(g["start"].replace("Z", "+00:00")) > horizon}
+            if key == "9":
+                out["games"] += [dict(g, asOf=g.get("asOf", old.get("pulledAt"))) for g in old.get("games", []) if g["id"] in keep]
+            target["props"] += [dict(p, asOf=p.get("asOf", old.get("pulledAt"))) for p in old.get("props", []) if p["game"] in keep]
+    wide["lastFull"] = out["lastFull"]
     out["objectsUsed"] = used
+    out["mode"] = wide["mode"] = "full" if full else "near"
+    print(f"{'FULL' if full else 'NEAR'} run")
     os.makedirs(os.path.join(ROOT, "docs"), exist_ok=True)
     with open(os.path.join(ROOT, "docs", "data.json"), "w") as f:
         json.dump(out, f, separators=(",", ":"))
