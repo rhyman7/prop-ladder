@@ -267,11 +267,20 @@ def summarize(rows):
     exp_profit = sum(r["first_true"] * profit10(r["first_odds"]) - (1 - r["first_true"]) * 10
                      for r in rows if r["result"] in ("win", "loss"))
     clv = [r["last_true"] - imp(r["first_odds"]) for r in rows]
-    pf = [r["profit"] for r in rows if r["result"] in ("win", "loss")]
+    # SE of ROI clustered by prop (game|player|stat): rungs of one prop win or
+    # lose together, so treating them as independent overstates certainty.
+    by = {}
+    for r in rows:
+        if r["result"] in ("win", "loss"):
+            k = (r["game"], r["pid"], r["stat"])
+            t = by.setdefault(k, [0.0, 0.0])
+            t[0] += r["profit"]
+            t[1] += 10.0
     se = None
-    if len(pf) > 1:
-        mu = sum(pf) / len(pf)
-        se = round((sum((x - mu) ** 2 for x in pf) / (len(pf) - 1)) ** 0.5 / len(pf) ** 0.5 / 10, 4)
+    if len(by) > 1 and staked:
+        roi = profit / staked
+        resid = [pf - roi * stk for pf, stk in by.values()]
+        se = round((len(by) / (len(by) - 1) * sum(x * x for x in resid)) ** 0.5 / staked, 4)
     return {"n": n, "w": w, "l": l, "p": pu, "profit": round(profit, 2), "roi": round(profit / staked, 4) if staked else None, "roiSE": se,
             "winRate": round(w / (w + l), 4) if w + l else None, "expWinRate": round(exp_w / (w + l), 4) if w + l else None,
             "expProfit": round(exp_profit, 2), "clv": round(sum(clv) / n, 4),
