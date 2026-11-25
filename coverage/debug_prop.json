@@ -1,0 +1,312 @@
+[
+ {
+  "side": "over",
+  "oddID": "points+rebounds+assists-LAMELO_BALL_1_NBA-game-ou-over",
+  "fair": "+112",
+  "fairOU": "30.5",
+  "byBookmaker": {
+   "fanduel": {
+    "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+    "available": true,
+    "odds": "-114",
+    "overUnder": "29.5",
+    "deeplink": "https://sportsbook.fanduel.com/addToBetslip?marketId=42.628256584&selectionId=26324737",
+    "altLines": [
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+      "available": true,
+      "odds": "-7000",
+      "overUnder": "14.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+      "available": true,
+      "odds": "-1100",
+      "overUnder": "19.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+      "available": true,
+      "odds": "-295",
+      "overUnder": "24.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+      "available": true,
+      "odds": "+220",
+      "overUnder": "34.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+      "available": true,
+      "odds": "+500",
+      "overUnder": "39.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+      "available": true,
+      "odds": "+1100",
+      "overUnder": "44.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+      "available": true,
+      "odds": "+2200",
+      "overUnder": "49.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-24T11:40:51.686Z",
+      "available": false,
+      "odds": "+5000",
+      "overUnder": "54.5"
+     }
+    ]
+   },
+   "novig": {
+    "lastUpdatedAt": "2026-11-25T00:41:38.147Z",
+    "available": true,
+    "odds": "-117",
+    "overUnder": "29.5",
+    "deeplink": "https://novig.com/events/01a20d4c-6d6c-7b41-8ae0-14db016e993c/sportsgameodds",
+    "altLines": [
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:38.147Z",
+      "available": true,
+      "odds": "+213",
+      "overUnder": "34.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:38.147Z",
+      "available": true,
+      "odds": "+426",
+      "overUnder": "39.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:38.147Z",
+      "available": true,
+      "odds": "+900",
+      "overUnder": "44.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:38.147Z",
+      "available": true,
+      "odds": "-223",
+      "overUnder": "49.5"
+     }
+    ]
+   },
+   "prophetexchange": {
+    "lastUpdatedAt": "2026-11-25T00:31:36.000Z",
+    "available": true,
+    "odds": "-121",
+    "overUnder": "29.5"
+   },
+   "hardrockbet": {
+    "lastUpdatedAt": "2026-11-25T00:39:22.000Z",
+    "available": true,
+    "odds": "-115",
+    "overUnder": "29.5"
+   },
+   "underdog": {
+    "lastUpdatedAt": "2026-11-25T00:40:06.000Z",
+    "available": true,
+    "odds": "+100",
+    "overUnder": "29.5"
+   },
+   "sleeper": {
+    "lastUpdatedAt": "2026-11-25T00:39:00.000Z",
+    "available": true,
+    "odds": "+100",
+    "overUnder": "29.5",
+    "altLines": [
+     {
+      "lastUpdatedAt": "2026-11-24T21:57:26.922Z",
+      "available": false,
+      "odds": "+100",
+      "overUnder": "20.5"
+     }
+    ]
+   },
+   "fliff": {
+    "lastUpdatedAt": "2026-11-25T00:39:16.000Z",
+    "available": true,
+    "odds": "-120",
+    "overUnder": "29.5",
+    "altLines": [
+     {
+      "lastUpdatedAt": "2026-11-24T22:31:01.096Z",
+      "available": false,
+      "odds": "-120",
+      "overUnder": "25.5"
+     }
+    ]
+   },
+   "ballybet": {
+    "lastUpdatedAt": "2026-11-25T00:39:21.000Z",
+    "available": true,
+    "odds": "-103",
+    "overUnder": "30.5",
+    "altLines": [
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:21.000Z",
+      "available": true,
+      "odds": "-295",
+      "overUnder": "24.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:21.000Z",
+      "available": true,
+      "odds": "-121",
+      "overUnder": "29.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:21.000Z",
+      "available": true,
+      "odds": "+180",
+      "overUnder": "34.5"
+     }
+    ]
+   },
+   "betrivers": {
+    "lastUpdatedAt": "2026-11-25T00:39:48.000Z",
+    "available": true,
+    "odds": "-103",
+    "overUnder": "30.5",
+    "deeplink": "https://nj.betrivers.com/?page=sportsbook#event/1028744802?coupon=single|4430884410|0",
+    "altLines": [
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:48.000Z",
+      "available": true,
+      "odds": "-295",
+      "overUnder": "24.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:48.000Z",
+      "available": true,
+      "odds": "-121",
+      "overUnder": "29.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:48.000Z",
+      "available": true,
+      "odds": "+180",
+      "overUnder": "34.5"
+     }
+    ]
+   },
+   "betparx": {
+    "lastUpdatedAt": "2026-11-25T00:39:27.000Z",
+    "available": true,
+    "odds": "-103",
+    "overUnder": "30.5",
+    "altLines": [
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:27.000Z",
+      "available": true,
+      "odds": "-295",
+      "overUnder": "24.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:27.000Z",
+      "available": true,
+      "odds": "-121",
+      "overUnder": "29.5"
+     },
+     {
+      "lastUpdatedAt": "2026-11-25T00:39:27.000Z",
+      "available": true,
+      "odds": "+180",
+      "overUnder": "34.5"
+     }
+    ]
+   },
+   "sugarhouse": {
+    "lastUpdatedAt": "2026-11-25T00:35:15.000Z",
+    "available": true,
+    "odds": "-103",
+    "overUnder": "30.5",
+    "deeplink": "https://pa.playsugarhouse.com/?page=sportsbook#home?coupon=single|4430884410|0"
+   }
+  }
+ },
+ {
+  "side": "under",
+  "oddID": "points+rebounds+assists-LAMELO_BALL_1_NBA-game-ou-under",
+  "fair": "-112",
+  "fairOU": "30.5",
+  "byBookmaker": {
+   "fanduel": {
+    "lastUpdatedAt": "2026-11-25T00:41:12.805Z",
+    "available": true,
+    "odds": "-114",
+    "overUnder": "29.5",
+    "deeplink": "https://sportsbook.fanduel.com/addToBetslip?marketId=42.628256584&selectionId=26324736"
+   },
+   "novig": {
+    "lastUpdatedAt": "2026-11-25T00:41:38.147Z",
+    "available": true,
+    "odds": "-113",
+    "overUnder": "29.5",
+    "deeplink": "https://novig.com/events/01a20d4c-6d6c-7b41-8ae0-14e2cbfb18ec/sportsgameodds",
+    "altLines": [
+     {
+      "lastUpdatedAt": "2026-11-25T00:41:38.147Z",
+      "available": true,
+      "odds": "-365",
+      "overUnder": "34.5"
+     }
+    ]
+   },
+   "prophetexchange": {
+    "lastUpdatedAt": "2026-11-25T00:31:36.000Z",
+    "available": true,
+    "odds": "-112",
+    "overUnder": "29.5"
+   },
+   "hardrockbet": {
+    "lastUpdatedAt": "2026-11-25T00:39:22.000Z",
+    "available": true,
+    "odds": "-115",
+    "overUnder": "29.5"
+   },
+   "underdog": {
+    "lastUpdatedAt": "2026-11-25T00:40:06.000Z",
+    "available": true,
+    "odds": "+100",
+    "overUnder": "29.5"
+   },
+   "sleeper": {
+    "lastUpdatedAt": "2026-11-25T00:39:00.000Z",
+    "available": true,
+    "odds": "+100",
+    "overUnder": "29.5"
+   },
+   "fliff": {
+    "lastUpdatedAt": "2026-11-25T00:39:16.000Z",
+    "available": true,
+    "odds": "-120",
+    "overUnder": "29.5"
+   },
+   "betrivers": {
+    "lastUpdatedAt": "2026-11-25T00:39:48.000Z",
+    "available": true,
+    "odds": "-132",
+    "overUnder": "30.5",
+    "deeplink": "https://nj.betrivers.com/?page=sportsbook#event/1028744802?coupon=single|4430884411|0"
+   },
+   "betparx": {
+    "lastUpdatedAt": "2026-11-25T00:39:27.000Z",
+    "available": true,
+    "odds": "-132",
+    "overUnder": "30.5"
+   },
+   "sugarhouse": {
+    "lastUpdatedAt": "2026-11-25T00:35:15.000Z",
+    "available": true,
+    "odds": "-132",
+    "overUnder": "30.5",
+    "deeplink": "https://pa.playsugarhouse.com/?page=sportsbook#home?coupon=single|4430884411|0"
+   }
+  }
+ }
+]
