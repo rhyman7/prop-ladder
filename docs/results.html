@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:12px}
+.cardhead{padding:14px 16px 0;margin:0;font-size:15px;font-weight:700}
+.pos{color:#1E3A8A;font-weight:600}.neg{color:#9A3412;font-weight:600}
+.res{display:inline-block;min-width:44px;padding:3px 8px;border-radius:6px;font-weight:700;font-size:13px;text-align:center}
+.res.win{background:#DBEAFE;color:#1E3A8A}.res.loss{background:#FFEDD5;color:#9A3412}.res.push,.res.void{background:#F3F4F6;color:#4B5563}
+.chart{padding:12px 16px 16px}
+.compact th,.compact td{padding:9px 6px;font-size:13px}
+.compact th:first-child,.compact td:first-child{padding-left:16px}
+.compact th:last-child,.compact td:last-child{padding-right:16px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Results</h1>
+      <p class="sub">How the Prop Ladder's All +EV plays actually did: every +EV rung with 2+ books, $10 flat at the first price seen, no boost.</p>
+    </div>
+    <div class="hdr-right">
+      <p class="stamp" id="stamp">Loading…</p>
+    </div>
+  </header>
+
+  <div id="msg"></div>
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <section class="card" aria-label="Profit over time">
+    <h2 class="cardhead">Cumulative profit ($10 a play)</h2>
+    <div class="chart" id="chart"></div>
+  </section>
+
+  <section class="grid2" id="groups" aria-label="Breakdowns"></section>
+
+  <section class="card tbl" aria-label="Graded plays">
+    <h2 class="cardhead" style="padding-bottom:12px">Graded plays</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th scope="col" class="l">Game day</th><th scope="col" class="l">Player</th><th scope="col" class="l">Bet</th><th scope="col" class="l">Book</th>
+          <th scope="col">Price</th><th scope="col">True prob</th><th scope="col">Edge</th><th scope="col">Books</th>
+          <th scope="col">Last price</th><th scope="col">Result</th><th scope="col">Actual</th><th scope="col">Profit</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p style="margin:0;padding:12px 16px"><button class="pill" type="button" id="more" hidden>Show more</button></p>
+  </section>
+
+  <footer class="legend">
+    <span>Expected win % = average true probability when first flagged; if the true probabilities are right, actual should track it.</span>
+    <span>CLV = market true prob at the last refresh before kickoff − the first price's implied prob. Positive = the market moved your way.</span>
+    <span>± = one standard error. Under a few hundred plays per row, results are mostly noise.</span>
+  </footer>
+</div>
+<script src="common.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  let R;
+  try { const r = await fetch('results.json', { cache: 'no-store' }); if (!r.ok) throw 0; R = await r.json(); }
+  catch (e) { $('stamp').textContent = 'No results yet'; $('msg').innerHTML = '<p class="warn">Tracking starts with the next price refresh. Results appear once games finish.</p>'; return; }
+  $('stamp').textContent = 'Updated ' + new Date(R.updatedAt).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' ET';
+  const money = (x) => x == null ? '—' : PL.money(x);
+  const cls = (x) => x > 0 ? 'pos' : x < 0 ? 'neg' : '';
+  const pctOr = (x) => x == null ? '—' : PL.pct(x);
+  const roi = (s) => s.roi == null ? '—' : PL.signedPct(s.roi) + (s.roiSE != null ? ' <span class="m" style="font-weight:400">± ' + (s.roiSE * 100).toFixed(1) + '%</span>' : '');
+  const since = R.since ? new Date(R.since).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) : '—';
+  const O = R.overall;
+  if (!O) {
+    $('msg').innerHTML = `<p class="warn">Tracking since ${since}: ${R.pending} plays waiting on their games. Nothing graded yet.</p>`;
+  }
+  const kp = (label, big, small, c = '') => `<div class="card fact"><span class="lbl">${label}</span><span class="big ${c}">${big}</span><span class="small">${small}</span></div>`;
+  $('kpis').innerHTML = O ? [
+    kp('Record', `${O.w}-${O.l}${O.p ? '-' + O.p : ''}`, `${O.n} graded · ${R.voids} void · ${R.pending} pending · since ${since}`),
+    kp('Profit', money(O.profit), `Expected ${money(O.expProfit)} from the edges`, O.profit > 0 ? 'good' : ''),
+    kp('ROI', roi(O), 'Per $ staked, flat $10'),
+    kp('Win rate', pctOr(O.winRate), `Expected ${pctOr(O.expWinRate)}`),
+    kp('Closing line value', PL.signedPct(O.clv), `${PL.pct(O.beatClose, 0)} of plays beat the last price`),
+  ].join('') : '';
+
+  // cumulative profit chart (inline SVG)
+  const C = R.curve || [];
+  if (C.length > 1) {
+    const W = 1100, H = 220, P = 36, ys = C.map((c) => c.profit), lo = Math.min(0, ...ys), hi = Math.max(0, ...ys), span = hi - lo || 1;
+    const x = (i) => P + i * (W - 2 * P) / (C.length - 1), y = (v) => H - P - (v - lo) * (H - 2 * P) / span;
+    const pts = C.map((c, i) => `${x(i).toFixed(1)},${y(c.profit).toFixed(1)}`).join(' ');
+    $('chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cumulative profit by game day, ending at ${money(ys[ys.length - 1])}">
+      <line x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}" stroke="#D1D5DB" stroke-dasharray="4 4"/>
+      <polyline points="${pts}" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="${P}" y="${H - 10}" font-size="12" fill="#4B5563">${C[0].date}</text>
+      <text x="${W - P}" y="${H - 10}" font-size="12" fill="#4B5563" text-anchor="end">${C[C.length - 1].date}</text>
+      <text x="${W - P}" y="${y(ys[ys.length - 1]) - 8}" font-size="13" font-weight="700" fill="#1E3A8A" text-anchor="end">${money(ys[ys.length - 1])}</text>
+      <text x="${P - 6}" y="${y(0) + 4}" font-size="12" fill="#4B5563" text-anchor="end">$0</text></svg>`;
+  } else {
+    $('chart').innerHTML = '<p class="small" style="margin:0">The chart appears after two game days are graded.</p>';
+  }
+
+  $('groups').innerHTML = (R.groups || []).filter((g) => g.rows.length).map((g) => `
+    <div class="card tbl"><h2 class="cardhead" style="padding-bottom:8px">${g.name}</h2><div class="scroll"><table class="compact">
+      <thead><tr><th class="l" scope="col">Group</th><th scope="col">Plays</th><th scope="col">W-L</th><th scope="col">Win %</th><th scope="col">Exp.</th><th scope="col">Profit</th><th scope="col">ROI</th><th scope="col">CLV</th></tr></thead>
+      <tbody>${g.rows.map((s) => `<tr><th class="l b" scope="row">${PL.esc(s.label)}</th><td>${s.n}</td><td class="m">${s.w}-${s.l}${s.p ? '-' + s.p : ''}</td>
+        <td>${pctOr(s.winRate)}</td><td class="m">${pctOr(s.expWinRate)}</td><td class="${cls(s.profit)}">${money(s.profit)}</td><td class="${cls(s.roi)}">${roi(s)}</td><td class="${cls(s.clv)}">${PL.signedPct(s.clv)}</td></tr>`).join('')}</tbody>
+    </table></div></div>`).join('');
+
+  let shown = 50;
+  const drawRows = () => {
+  $('more').hidden = (R.recent || []).length <= shown;
+  $('rows').innerHTML = (R.recent || []).slice(0, shown).map((r) => {
+    const day = new Date(r.start).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
+    const bet = (r.side === 'o' ? 'Over ' : 'Under ') + r.line + ' ' + r.statLabel.toLowerCase();
+    return `<tr><td class="l m">${day}</td><td class="l b">${PL.esc(r.player)} <span class="m" style="font-weight:400">${PL.esc(r.team || '')}</span></td>
+      <td class="l">${PL.esc(bet)}</td><td class="l">${r.book === 'dk' ? 'DraftKings' : 'FanDuel'}</td><td class="b">${PL.fmtOdds(r.first_odds)}</td>
+      <td>${PL.pct(r.first_true)}</td><td class="pos">${PL.signedPct(r.first_edge)}</td><td class="m">${r.first_books}</td>
+      <td class="m">${r.last_odds != null ? PL.fmtOdds(r.last_odds) : '—'}</td><td><span class="res ${r.result}">${r.result}</span></td>
+      <td class="m">${r.actual ?? '—'}</td><td class="${cls(r.profit)}">${r.result === 'void' ? '—' : money(r.profit)}</td></tr>`;
+  }).join('') || '<tr><td class="l" colspan="12">No graded plays yet.</td></tr>';
+  };
+  $('more').onclick = () => { shown += 100; drawRows(); };
+  drawRows();
+})();
+</script>
+</body>
+</html>

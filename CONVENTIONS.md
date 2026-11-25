@@ -6,7 +6,8 @@ Standalone site, rhyman7.github.io/prop-ladder (GitHub Pages from `docs/`):
   of every rung against DraftKings and FanDuel, with a profit-boost selector.
 - `plays.html` — All +EV plays: every rung and side where the true probability
   beats the book's implied probability, best edge first.
-- `results.html` — Results: how the logged All +EV plays did.
+- `results.html` — Results: how the logged All +EV plays did. Separate page:
+  Ryan does NOT want the Prop Ladder pages to link to it (no nav link either way).
 
 ## Data
 
