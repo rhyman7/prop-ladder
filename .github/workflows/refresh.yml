@@ -2,7 +2,7 @@ name: Refresh prices
 
 # Pulls upcoming NFL, NCAAF, NBA and NCAAB props from SportsGameOdds and
 # rebuilds docs/data.json, then logs and grades the +EV plays (track.py).
-# Cost: about 1 SGO object per event; the caps in scripts/build.py
+# Cost: about 1 SGO object per event; the caps in scripts/build.py 
 # (16 + 25 + 15 + 20) keep the pull at 76 objects or fewer, and grading adds
 # about 1 per finished game with logged plays (at most 40 a run).
 # ROOKIE TRIAL (Nov 24 - Dec 1, 2026): hourly. One run = one pull (caps 16 +
