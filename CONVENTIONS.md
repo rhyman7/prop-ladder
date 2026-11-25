@@ -56,6 +56,8 @@ logged history to test on (nothing logged yet).
   BetOnline, LowVig, Novig, Prophet Exchange, Kalshi, Polymarket, Matchbook,
   Betfair Exchange). Where any sharp book posts a rung, true probability = the
   sharp books' median (`ns` on the rung); otherwise the wide median.
+- Pages are generated: edit `docs/index.html` / `docs/plays.html`, then run
+  `python scripts/make_wide_pages.py`. Never edit `docs/wide/*.html` by hand.
 - Own play log `data/wide_plays_log.json`, summary `docs/wide/results.json`.
 - Head-to-head `data/compare_log.json` -> `docs/compare.json`: every rung both
   price where wide used sharp books; P(over) first and last before kickoff from
