@@ -1,532 +1,87 @@
 {
- "oddID": "passing_yards-BROC_LOWRY_1_NCAAF-game-ou-over",
- "opposingOddID": "passing_yards-BROC_LOWRY_1_NCAAF-game-ou-under",
- "marketName": "Broc Lowry Passing Yards Over/Under",
- "statID": "passing_yards",
- "statEntityID": "BROC_LOWRY_1_NCAAF",
+ "oddID": "receiving_longestReception-JORDAN_DWYER_1_NCAAF-game-ou-over",
+ "opposingOddID": "receiving_longestReception-JORDAN_DWYER_1_NCAAF-game-ou-under",
+ "marketName": "Jordan Dwyer Longest Reception Over/Under",
+ "statID": "receiving_longestReception",
+ "statEntityID": "JORDAN_DWYER_1_NCAAF",
  "periodID": "game",
  "betTypeID": "ou",
  "sideID": "over",
- "playerID": "BROC_LOWRY_1_NCAAF",
+ "playerID": "JORDAN_DWYER_1_NCAAF",
  "started": false,
  "ended": false,
  "cancelled": false,
  "bookOddsAvailable": true,
  "fairOddsAvailable": true,
- "fairOdds": "-101",
- "bookOdds": "-115",
- "fairOverUnder": "165.5",
- "bookOverUnder": "164.5",
- "openFairOdds": "+100",
- "openBookOdds": "+100",
- "openFairOverUnder": "164.5",
- "openBookOverUnder": "164.5",
+ "fairOdds": "+100",
+ "bookOdds": "-108",
+ "fairOverUnder": "24.5",
+ "bookOverUnder": "24.5",
+ "openFairOdds": "-102",
+ "openBookOdds": "-118",
+ "openFairOverUnder": "25.5",
+ "openBookOverUnder": "25.5",
  "scoringSupported": true,
  "byBookmaker": {
   "fanduel": {
-   "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-   "available": true,
+   "lastUpdatedAt": "2026-11-25T00:26:55.065Z",
+   "available": false,
    "odds": "-112",
-   "overUnder": "164.5",
-   "deeplink": "https://sportsbook.fanduel.com/addToBetslip?marketId=42.627916521&selectionId=101792656",
+   "overUnder": "23.5",
    "altLines": [
     {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "-620",
-     "overUnder": "99.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "-300",
-     "overUnder": "124.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "-160",
-     "overUnder": "149.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "+114",
-     "overUnder": "174.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "+198",
-     "overUnder": "199.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "+320",
-     "overUnder": "224.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "+540",
-     "overUnder": "249.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "+920",
-     "overUnder": "274.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "+1300",
-     "overUnder": "299.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:40.982Z",
-     "available": true,
-     "odds": "+2500",
-     "overUnder": "324.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:20:44.413Z",
-     "available": false,
-     "odds": "+3500",
-     "overUnder": "349.5"
-    }
-   ]
-  },
-  "bovada": {
-   "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-   "available": true,
-   "odds": "-115",
-   "overUnder": "164.5",
-   "altLines": [
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "-725",
-     "overUnder": "99.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "-170",
-     "overUnder": "149.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T18:01:07.508Z",
-     "available": false,
-     "odds": "-112",
-     "overUnder": "169.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+105",
-     "overUnder": "174.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+185",
-     "overUnder": "199.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+315",
-     "overUnder": "224.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+500",
-     "overUnder": "249.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+800",
-     "overUnder": "274.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+1200",
-     "overUnder": "299.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+2000",
-     "overUnder": "324.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+2800",
-     "overUnder": "349.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+3500",
-     "overUnder": "374.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:03.000Z",
-     "available": true,
-     "odds": "+4000",
-     "overUnder": "399.5"
-    }
-   ]
-  },
-  "caesars": {
-   "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-   "available": true,
-   "odds": "-115",
-   "overUnder": "164.5",
-   "altLines": [
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "-182",
-     "overUnder": "149.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "-141",
-     "overUnder": "159.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:18.984Z",
-     "available": true,
-     "odds": "-115",
-     "overUnder": "165.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T18:52:46.000Z",
-     "available": false,
-     "odds": "-115",
-     "overUnder": "166.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "-109",
-     "overUnder": "169.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+118",
-     "overUnder": "179.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+150",
-     "overUnder": "189.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+192",
-     "overUnder": "199.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+240",
-     "overUnder": "209.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+305",
-     "overUnder": "219.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+375",
-     "overUnder": "229.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+475",
-     "overUnder": "239.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+575",
-     "overUnder": "249.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+700",
-     "overUnder": "259.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+850",
-     "overUnder": "269.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+1000",
-     "overUnder": "279.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:19:36.000Z",
-     "available": true,
-     "odds": "+1300",
-     "overUnder": "289.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:12:01.000Z",
-     "available": false,
-     "odds": "+1400",
-     "overUnder": "299.5"
-    }
-   ]
-  },
-  "espnbet": {
-   "lastUpdatedAt": "2026-11-24T23:22:18.984Z",
-   "available": true,
-   "odds": "-120",
-   "overUnder": "164.5",
-   "altLines": [
-    {
-     "lastUpdatedAt": "2026-11-24T17:53:59.000Z",
-     "available": false,
-     "odds": "-175",
-     "overUnder": "149.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T19:01:27.454Z",
+     "lastUpdatedAt": "2026-11-24T00:55:37.498Z",
      "available": false,
      "odds": "-120",
-     "overUnder": "169.5"
+     "overUnder": "24.5"
     },
     {
-     "lastUpdatedAt": "2026-11-24T17:53:59.000Z",
+     "lastUpdatedAt": "2026-11-24T03:14:38.850Z",
      "available": false,
-     "odds": "+100",
-     "overUnder": "174.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T17:53:59.000Z",
-     "available": false,
-     "odds": "+175",
-     "overUnder": "199.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T17:53:59.000Z",
-     "available": false,
-     "odds": "+300",
-     "overUnder": "224.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T17:53:59.000Z",
-     "available": false,
-     "odds": "+500",
-     "overUnder": "249.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T17:53:59.000Z",
-     "available": false,
-     "odds": "+800",
-     "overUnder": "274.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T17:53:59.000Z",
-     "available": false,
-     "odds": "+1200",
-     "overUnder": "299.5"
-    }
-   ]
-  },
-  "betmgm": {
-   "lastUpdatedAt": "2026-11-24T23:22:57.403Z",
-   "available": true,
-   "odds": "+145",
-   "overUnder": "199.5",
-   "deeplink": "https://www.nj.betmgm.com/en/sports/events/6:49894?options=6:49894-4700127-7801827",
-   "altLines": [
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:57.403Z",
-     "available": true,
-     "odds": "-295",
-     "overUnder": "149.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:57.403Z",
-     "available": true,
-     "odds": "+500",
-     "overUnder": "249.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:57.403Z",
-     "available": true,
-     "odds": "+1300",
-     "overUnder": "299.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:22:57.403Z",
-     "available": true,
-     "odds": "+2000",
-     "overUnder": "349.5"
+     "odds": "-110",
+     "overUnder": "25.5"
     }
    ]
   },
   "draftkings": {
-   "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-   "available": true,
-   "odds": "-109",
-   "overUnder": "169.5",
-   "deeplink": "https://sportsbook.draftkings.com/event/35043754?outcomes=0QA392104244",
+   "lastUpdatedAt": "2026-11-24T18:18:28.022Z",
+   "available": false,
+   "odds": "-135",
+   "overUnder": "23.5",
    "altLines": [
     {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
+     "lastUpdatedAt": "2026-11-25T00:26:56.734Z",
      "available": true,
-     "odds": "-169",
-     "overUnder": "149.5"
-    },
+     "odds": "-130",
+     "overUnder": "24.5"
+    }
+   ]
+  },
+  "fliff": {
+   "lastUpdatedAt": "2026-11-25T00:16:26.000Z",
+   "available": true,
+   "odds": "-125",
+   "overUnder": "24.5",
+   "altLines": [
     {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "-135",
-     "overUnder": "159.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T19:13:23.763Z",
+     "lastUpdatedAt": "2026-11-24T18:18:17.216Z",
      "available": false,
-     "odds": "-116",
-     "overUnder": "162.5"
-    },
+     "odds": "-130",
+     "overUnder": "23.5"
+    }
+   ]
+  },
+  "underdog": {
+   "lastUpdatedAt": "2026-11-25T00:02:47.000Z",
+   "available": true,
+   "odds": "+100",
+   "overUnder": "24.5",
+   "altLines": [
     {
-     "lastUpdatedAt": "2026-11-24T23:17:15.000Z",
+     "lastUpdatedAt": "2026-11-24T18:23:14.216Z",
      "available": false,
-     "odds": "-119",
-     "overUnder": "163.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:17:32.509Z",
-     "available": false,
-     "odds": "-118",
-     "overUnder": "164.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "-118",
-     "overUnder": "165.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:09:30.000Z",
-     "available": false,
-     "odds": "-118",
-     "overUnder": "166.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T18:53:15.806Z",
-     "available": false,
-     "odds": "-116",
-     "overUnder": "167.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T18:58:18.064Z",
-     "available": false,
-     "odds": "-117",
-     "overUnder": "168.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T18:51:15.000Z",
-     "available": false,
-     "odds": "-119",
-     "overUnder": "170.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+114",
-     "overUnder": "179.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+142",
-     "overUnder": "189.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+177",
-     "overUnder": "199.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+221",
-     "overUnder": "209.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+277",
-     "overUnder": "219.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+337",
-     "overUnder": "229.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+407",
-     "overUnder": "239.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+487",
-     "overUnder": "249.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+598",
-     "overUnder": "259.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+720",
-     "overUnder": "269.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T23:23:00.328Z",
-     "available": true,
-     "odds": "+870",
-     "overUnder": "279.5"
-    },
-    {
-     "lastUpdatedAt": "2026-11-24T18:58:18.064Z",
-     "available": false,
-     "odds": "+980",
-     "overUnder": "289.5"
+     "odds": "+100",
+     "overUnder": "23.5"
     }
    ]
   }

@@ -1,13 +1,13 @@
 {
- "oddID": "points+rebounds-SEBASTIAN_WILLIAMSADAMS_1_NCAAB-game-ou-over",
- "opposingOddID": "points+rebounds-SEBASTIAN_WILLIAMSADAMS_1_NCAAB-game-ou-under",
- "marketName": "Sebastian Williams-Adams Points + Rebounds Over/Under",
- "statID": "points+rebounds",
- "statEntityID": "SEBASTIAN_WILLIAMSADAMS_1_NCAAB",
+ "oddID": "points+assists-TAHAAD_PETTIFORD_1_NCAAB-game-ou-over",
+ "opposingOddID": "points+assists-TAHAAD_PETTIFORD_1_NCAAB-game-ou-under",
+ "marketName": "Tahaad Pettiford Points + Assists Over/Under",
+ "statID": "points+assists",
+ "statEntityID": "TAHAAD_PETTIFORD_1_NCAAB",
  "periodID": "game",
  "betTypeID": "ou",
  "sideID": "over",
- "playerID": "SEBASTIAN_WILLIAMSADAMS_1_NCAAB",
+ "playerID": "TAHAAD_PETTIFORD_1_NCAAB",
  "started": false,
  "ended": false,
  "cancelled": false,
@@ -15,34 +15,65 @@
  "fairOddsAvailable": true,
  "fairOdds": "+100",
  "bookOdds": "+100",
- "fairOverUnder": "14.5",
- "bookOverUnder": "14.5",
- "openFairOdds": "+110",
+ "fairOverUnder": "25.5",
+ "bookOverUnder": "25.5",
+ "openFairOdds": "+100",
  "openBookOdds": "+100",
- "openFairOverUnder": "15.5",
- "openBookOverUnder": "15.5",
+ "openFairOverUnder": "25.5",
+ "openBookOverUnder": "25.5",
  "scoringSupported": false,
  "byBookmaker": {
   "draftkings": {
-   "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
-   "available": true,
-   "odds": "-140",
-   "overUnder": "14.5",
-   "deeplink": "https://sportsbook.draftkings.com/?outcomes=0QA392324009%232379824539_13L92483Q1-1640108686Q20",
+   "lastUpdatedAt": "2026-11-25T00:02:25.000Z",
+   "available": false,
+   "odds": "-105",
+   "overUnder": "25.5",
    "altLines": [
     {
-     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "lastUpdatedAt": "2026-11-25T00:25:18.000Z",
      "available": true,
-     "odds": "-900",
-     "overUnder": "9.5"
+     "odds": "-450",
+     "overUnder": "19.5"
     },
     {
-     "lastUpdatedAt": "2026-11-24T23:20:14.000Z",
+     "lastUpdatedAt": "2026-11-25T00:25:18.000Z",
      "available": true,
-     "odds": "+285",
-     "overUnder": "19.5"
+     "odds": "-130",
+     "overUnder": "24.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-25T00:25:18.000Z",
+     "available": true,
+     "odds": "+225",
+     "overUnder": "29.5"
+    },
+    {
+     "lastUpdatedAt": "2026-11-25T00:25:18.000Z",
+     "available": true,
+     "odds": "+650",
+     "overUnder": "34.5"
     }
    ]
+  },
+  "fliff": {
+   "lastUpdatedAt": "2026-11-25T00:21:58.545Z",
+   "available": true,
+   "odds": "-135",
+   "overUnder": "24.5",
+   "altLines": [
+    {
+     "lastUpdatedAt": "2026-11-25T00:11:49.653Z",
+     "available": false,
+     "odds": "-115",
+     "overUnder": "25.5"
+    }
+   ]
+  },
+  "underdog": {
+   "lastUpdatedAt": "2026-11-25T00:05:07.000Z",
+   "available": false,
+   "odds": "+100",
+   "overUnder": "25.5"
   }
  }
 }
