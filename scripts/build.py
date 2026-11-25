@@ -50,6 +50,10 @@ FREE_BOOKS = {"draftkings", "fanduel", "caesars", "betmgm", "bovada", "espnbet",
 SHARP_BOOKS = {"bookmakereu", "betonline", "lowvig", "novig", "prophetexchange",
                "kalshi", "polymarket", "matchbook", "betfairexchange"}
 WIDE_BOOKS = FREE_BOOKS | SHARP_BOOKS
+# Exchanges / prediction markets post one-sided resting orders that can be
+# stale or junk. Their price is used only at lines where they show BOTH sides
+# and the two implied probabilities add to 0.98-1.15.
+EXCHANGES = {"novig", "prophetexchange", "kalshi", "polymarket", "matchbook", "betfairexchange"}
 TEAM_ENTITIES = {"home", "away", "all"}
 
 # Assumed coefficient of variation (sd / mean) per stat. STARTING VALUES, NOT
@@ -280,6 +284,11 @@ def build_prop(o, u, books=None, sharp=None):
     books = books or FREE_BOOKS
     oq_all = {b: monotone(quotes(q), "o") for b, q in ob.items() if b in books}
     uq_all = {b: monotone(quotes(q), "u") for b, q in ub.items() if b in books}
+    for b in EXCHANGES & set(oq_all) | EXCHANGES & set(uq_all):
+        oq, uq = oq_all.get(b, {}), uq_all.get(b, {})
+        ok = {ln for ln in oq if ln in uq and 0.98 <= imp(oq[ln]) + imp(uq[ln]) <= 1.15}
+        oq_all[b] = {ln: v for ln, v in oq.items() if ln in ok}
+        uq_all[b] = {ln: v for ln, v in uq.items() if ln in ok}
     if not any(oq_all.get(b) or uq_all.get(b) for b in BOOKS):
         return None
     a = anchor(o, oq_all, uq_all)

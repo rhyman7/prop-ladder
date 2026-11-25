@@ -60,7 +60,10 @@ logged history to test on (nothing logged yet).
 - Both versions drop quotes that break their own book's ladder order
   (`monotone()` in build.py): Nov 24 a junk Novig quote (LaMelo Ball PRA 49.5
   at -223 after 44.5 at +900) made 50+ look 66% likely at FanDuel +2200.
-  Logs restarted Nov 24 ~7:50 PM ET after this fix.
+  Exchanges (`EXCHANGES`) count only at lines where they quote both sides and
+  the two implied probabilities sum to 0.98-1.15 (one-sided exchange orders
+  produced 15-30% fake edges on 2-book rungs).
+  Logs restarted Nov 24 ~8:00 PM ET after these fixes.
 - Pages are generated: edit `docs/index.html` / `docs/plays.html`, then run
   `python scripts/make_wide_pages.py`. Never edit `docs/wide/*.html` by hand.
 - Own play log `data/wide_plays_log.json`, summary `docs/wide/results.json`.
