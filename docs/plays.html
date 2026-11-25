@@ -25,7 +25,7 @@
     <div class="field"><span class="lbl">Sport</span><div class="pills" id="sports"></div></div>
     <div class="field"><span class="lbl">Book</span><div class="pills" id="books"></div></div>
     <div class="field"><span class="lbl">Minimum edge</span><div class="pills" id="mins"></div></div>
-    <div class="field"><span class="lbl">Rungs</span><div class="pills" id="basis"></div><span class="hint">Anchor = the line the true probability comes from</span></div>
+    <div class="field"><span class="lbl">Books behind true prob</span><div class="pills" id="basis"></div><span class="hint">More books = a firmer number</span></div>
     <div class="field"><span class="lbl">Profit boost</span><div class="pills" id="boosts"></div></div>
   </section>
 
@@ -38,7 +38,7 @@
         <thead><tr>
           <th scope="col">Edge</th><th scope="col" class="l">Player</th><th scope="col" class="l">Bet</th><th scope="col" class="l">Book</th>
           <th scope="col">Price</th><th scope="col">Book implied</th><th scope="col">True prob</th><th scope="col">EV / $10</th>
-          <th scope="col" class="l">Basis</th><th scope="col">Game</th>
+          <th scope="col">Books</th><th scope="col">Game</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -48,7 +48,7 @@
 
   <footer class="legend">
     <span>Edge = true prob − book implied (after the boost). Click a player for the full ladder.</span>
-    <span>Curve rungs depend on the stat's fitted spread: untested, treat as estimates. Anchor rungs are the consensus number itself.</span>
+    <span>True prob = median of the books posting that rung, each with its own vig removed. Untested so far: logging results will show how well it holds.</span>
   </footer>
 </div>
 <script src="common.js"></script>
@@ -58,7 +58,7 @@
   let data;
   try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
   $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'pinnacle' ? ' · Pinnacle' : ' · consensus');
-  const S = { sport: 'All', book: 'Both', min: 0, basis: 'All', boost: 0 };
+  const S = { sport: 'All', book: 'Both', min: 0, basis: 2, boost: 0 };
   const games = new Map(data.games.map((g) => [g.id, g]));
   const MAX_ROWS = 300;
 
@@ -77,13 +77,13 @@
     pills($('sports'), 'sport', [['All', 'All'], ...PL.SPORTS.map((s) => [s, s])]);
     pills($('books'), 'book', [['Both', 'Both'], ['dk', 'DK'], ['fd', 'FD']]);
     pills($('mins'), 'min', [[0, 'Any'], [1, '1%+'], [2, '2%+'], [3, '3%+']]);
-    pills($('basis'), 'basis', [['All', 'All'], ['anchor', 'Anchor only']]);
+    pills($('basis'), 'basis', [[1, 'Any'], [2, '2+'], [3, '3+'], [4, '4+']]);
     pills($('boosts'), 'boost', PL.BOOSTS.map((b) => [b, b ? b + '%' : 'None']));
     const B = S.boost / 100, out = [];
     for (const p of data.props) {
       if (S.sport !== 'All' && p.sport !== S.sport) continue;
       for (const r of p.rungs) {
-        if (S.basis === 'anchor' && !r.a) continue;
+        if (r.n < S.basis) continue;
         for (const side of ['o', 'u']) {
           const { pW, pL } = PL.sideProbs(r, side);
           for (const bk of ['dk', 'fd']) {
@@ -108,7 +108,7 @@
         <td class="l">${PL.esc(bet)}</td><td class="l">${x.bk === 'dk' ? 'DraftKings' : 'FanDuel'}</td>
         <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
         <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
-        <td class="l"><span class="tag${x.r.a ? ' dark' : ''}">${x.r.a ? 'Anchor' : 'Curve'}</span>${x.p.anchor.n < 2 ? ' <span class="tag">1 book</span>' : ''}</td>
+        <td class="m">${x.r.n}</td>
         <td class="m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) + ' · ' : ''}${PL.when(x.p.start)}</td></tr>`;
     }).join('');
   }

@@ -13,7 +13,7 @@
   <header>
     <div>
       <h1>Prop Ladder</h1>
-      <p class="sub">True probability for every rung, against DraftKings and FanDuel.</p>
+      <p class="sub">True probability for every rung, from the whole market with the vig removed, against DraftKings and FanDuel.</p>
     </div>
     <div class="hdr-right">
       <nav aria-label="Pages"><a href="index.html" aria-current="page">Prop Ladder</a><a href="plays.html">All +EV plays</a></nav>
@@ -37,7 +37,7 @@
     <div class="scroll">
       <table>
         <thead><tr>
-          <th scope="col" class="l">Rung</th><th scope="col">True prob</th><th scope="col" class="sep">Fair odds</th>
+          <th scope="col" class="l">Rung</th><th scope="col">True prob</th><th scope="col">Fair odds</th><th scope="col" class="sep">Books</th>
           <th scope="col">DK price</th><th scope="col">DK implied</th><th scope="col">DK edge</th><th scope="col" class="sep">DK EV / $10</th>
           <th scope="col">FD price</th><th scope="col">FD implied</th><th scope="col">FD edge</th><th scope="col">FD EV / $10</th>
         </tr></thead>
@@ -50,7 +50,7 @@
     <span><span class="sw" style="background:#DBEAFE;border:1px solid #1D4ED8"></span>+EV at that book</span>
     <span><span class="sw" style="background:#FFEDD5;border:1px solid #C2410C"></span>Edge worse than −3%</span>
     <span>Edge = true prob − book implied (after the boost). Shaded row = anchor line. — = not offered.</span>
-    <span>Rungs other than the anchor come from the stat's curve: untested, treat as estimates.</span>
+    <span>Books = how many books' prices (vig removed) make that rung's true probability. Grey = one book only.</span>
   </footer>
 </div>
 <script src="common.js"></script>
@@ -103,7 +103,7 @@
 
     const prop = forPlayer.find((p) => p.stat === S.stat);
     history.replaceState(null, '', '#' + new URLSearchParams({ sport: S.sport || '', team: S.team || '', pid: S.pid || '', stat: S.stat || '', side: S.side, boost: S.boost }).toString());
-    if (!prop) { $('facts').innerHTML = ''; $('rows').innerHTML = '<tr><td class="l" colspan="11">No props for this pick.</td></tr>'; return; }
+    if (!prop) { $('facts').innerHTML = ''; $('rows').innerHTML = '<tr><td class="l" colspan="12">No props for this pick.</td></tr>'; return; }
     table(prop);
   }
 
@@ -122,13 +122,10 @@
         const cls = x.edge > 0 ? 'plus' : x.edge < -0.03 ? 'minus' : '';
         return `<td class="b">${PL.fmtOdds(odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="${cls}">${PL.signedPct(x.edge)}</td><td class="${cls}${sep}">${PL.money(x.ev)}</td>`;
       });
-      return `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m sep">${PL.fair(pTrue)}</td>${cells[0]}${cells[1]}</tr>`;
+      return `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m">${PL.fair(pTrue)}</td><td class="m sep${r.n < 2 ? ' na' : ''}">${r.n}</td>${cells[0]}${cells[1]}</tr>`;
     });
-    $('rows').innerHTML = rows.join('') || '<tr><td class="l" colspan="11">Neither book offers this side.</td></tr>';
-    const c = data.curves[prop.stat];
-    const curveTxt = !prop.curve ? 'No curve for this stat: anchor line only'
-      : c && c.fitted ? `Other rungs from the ${prop.statLabel.toLowerCase()} curve, spread fitted to ${c.points} two-sided rungs in today's market`
-      : `Other rungs from the ${prop.statLabel.toLowerCase()} curve, assumed spread (too few rungs to fit)`;
+    $('rows').innerHTML = rows.join('') || '<tr><td class="l" colspan="12">Neither book offers this side.</td></tr>';
+    const curveTxt = `Every rung: each of ${prop.books} books' vig removed, median of the books posting it`;
     const game = data.games.find((g) => g.id === prop.game);
     const vs = game ? (game.away.name + ' at ' + game.home.name) : '';
     $('facts').innerHTML = `

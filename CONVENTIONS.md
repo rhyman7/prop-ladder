@@ -27,15 +27,16 @@ Standalone site, rhyman7.github.io/prop-ladder (GitHub Pages from `docs/`):
    be far off (Nov 24: 33.6% at 275.5 pass yds with DK at 50% on 270.5).
    `SOURCE = "consensus"`; switch to Pinnacle's no-vig line if a paid key ever
    carries it.
-2. **Curve:** a negative binomial (or Poisson) per stat, mean set so it matches
-   the anchor exactly. Each stat's spread (coefficient of variation) is fitted
-   each run to that day's two-sided rungs (2+ books quoting both sides, vig
-   removed); with fewer than 15 such rungs it falls back to the assumed value in
-   `CURVES`. Stats with no curve show only the anchor line.
+2. **Every rung (market ladder):** each book's vig is measured on its own
+   two-sided line nearest 50% (power method exponent k); every rung that book
+   posts is de-vigged with its k (books with no two-sided line use the median
+   k); a rung's true probability = median across the books posting it (`n`).
+   The negative-binomial curve in `build.py` is not used: on Nov 24 it fit
+   yardage badly (implied negative vig).
 3. **Pricing (browser):** implied = 10 / (10 + profit after boost); edge =
    true − implied; EV per $10 counts pushes as neither win nor loss.
 
-Rungs away from the anchor are **untested estimates** and the pages say so. Any
+The true probabilities are **untested** and the pages say so. Any
 change to the method follows the project's pre-set test rule once there is a
 logged history to test on (nothing logged yet).
 

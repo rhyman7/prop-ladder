@@ -4,10 +4,10 @@
    with alternate lines. One SGO object per event; caps per league below.
 2. For each player over/under prop, find the TRUE probability at an anchor line:
    the line the most books quote on both sides, each book's vig removed, median.
-3. Fit the stat's curve to that anchor (negative binomial, spread set by an
-   assumed coefficient of variation per stat, CURVES below) and read the true
-   probability of every rung DraftKings or FanDuel offers. Stats without a
-   curve keep only rungs at the anchor line.
+3. Every rung: each book's vig (measured on its own two-sided line) is removed
+   from each rung it posts, power method; true probability = median across the
+   books posting that rung ("n" on each rung). The negative-binomial curve code
+   below is kept for reference but not used: on Nov 24 it fit yardage badly.
 4. Write the DK/FD price for every rung and side. The pages do the edge, EV and
    boost math in the browser.
 
@@ -234,7 +234,22 @@ def fit_cv(samples, default):
     return best, round(math.sqrt(best_err / n) * 100, 2) if n else None
 
 
-def build_prop(o, u, cvs):
+def power_k(po, pu):
+    """Exponent k with po**k + pu**k = 1 (power vig removal)."""
+    lo, hi = 0.5, 5.0
+    for _ in range(60):
+        k = (lo + hi) / 2
+        if po ** k + pu ** k > 1:
+            lo = k
+        else:
+            hi = k
+    return (lo + hi) / 2
+
+
+def build_prop(o, u):
+    """Market ladder: each book's vig, measured on its own two-sided line(s), is
+    removed from every rung it posts (power method); a rung's true probability
+    is the median across the books posting it."""
     ob, ub = o.get("byBookmaker") or {}, u.get("byBookmaker") or {}
     oq_all = {b: quotes(q) for b, q in ob.items()}
     uq_all = {b: quotes(q) for b, q in ub.items()}
@@ -244,46 +259,42 @@ def build_prop(o, u, cvs):
     if not a:
         return None
     aline, ap, an, how = a
-    if not (0.005 < ap < 0.995):
+    # each book's vig exponent from its two-sided line nearest 50%
+    ks = {}
+    for b in set(oq_all) | set(uq_all):
+        two = [(ln, imp(oq_all[b][ln]), imp(uq_all[b][ln])) for ln in oq_all.get(b, {}) if ln in uq_all.get(b, {})]
+        if two:
+            ln, po, pu = min(two, key=lambda t: abs(t[1] / (t[1] + t[2]) - 0.5))
+            if po + pu > 1:
+                ks[b] = power_k(po, pu)
+    if not ks:
         return None
-    stat = o.get("statID")
-    has_curve = stat in cvs
-    cv = cvs.get(stat)
-    lines = set()
-    for b in BOOKS:
-        lines |= set(oq_all.get(b, {})) | set(uq_all.get(b, {}))
-    if not has_curve:
-        lines = {ln for ln in lines if ln == aline}
-    if not lines:
-        return None
-    mean = None
-    if has_curve:
-        mean = fit_mean(aline, ap, cv)
-        pm = pmf_list(mean, cv, int(mean * 8 + 60 + max(lines) * 2))
+    k_default = st.median(ks.values())
+    fair = {}   # line -> [fair p_over from each book]
+    for b in set(oq_all) | set(uq_all):
+        k = ks.get(b, k_default)
+        for ln, odds in oq_all.get(b, {}).items():
+            fair.setdefault(ln, {}).setdefault(b, []).append(imp(odds) ** k)
+        for ln, odds in uq_all.get(b, {}).items():
+            fair.setdefault(ln, {}).setdefault(b, []).append(1 - imp(odds) ** k)
     rungs = []
-    for ln in sorted(lines):
-        if ln == aline:
-            po, push = ap, 0.0
-            if float(ln).is_integer() and has_curve:
-                po, push = tail_over(pm, ln)
-        else:
-            po, push = tail_over(pm, ln)
-        pu = max(1.0 - po - push, 0.0)
-        r = {"l": ln, "po": round(po, 4), "pu": round(pu, 4), "a": ln == aline}
-        if push:
-            r["pp"] = round(push, 4)
-        for b, k in BOOKS.items():
+    for ln in sorted(fair):
+        per_book = [st.mean(v) for v in fair[ln].values()]
+        po = min(max(st.median(per_book), 0.001), 0.999)
+        r = {"l": ln, "po": round(po, 4), "pu": round(1 - po, 4), "n": len(per_book), "a": ln == aline}
+        for b, key in BOOKS.items():
             if ln in oq_all.get(b, {}):
-                r[k + "o"] = oq_all[b][ln]
+                r[key + "o"] = oq_all[b][ln]
             if ln in uq_all.get(b, {}):
-                r[k + "u"] = uq_all[b][ln]
-        if any(k in r for k in ("dko", "dku", "fdo", "fdu")):
+                r[key + "u"] = uq_all[b][ln]
+        if any(x in r for x in ("dko", "dku", "fdo", "fdu")):
             rungs.append(r)
     if not rungs:
         return None
-    return {"stat": stat, "statLabel": STAT_LABEL.get(stat, stat), "anchor": {
-        "l": aline, "p": round(ap, 4), "fair": american(ap), "n": an, "how": how},
-        "curve": has_curve, "mean": round(mean, 2) if mean else None, "rungs": rungs}
+    stat = o.get("statID")
+    return {"stat": stat, "statLabel": STAT_LABEL.get(stat, stat.replace("_", " ").replace("+", " + ")),
+            "anchor": {"l": aline, "p": round(ap, 4), "fair": american(ap), "n": an},
+            "books": len(ks), "rungs": rungs}
 
 
 def main():
@@ -291,10 +302,10 @@ def main():
         sys.exit("SGO_API_KEY is not set")
     now = datetime.now(timezone.utc)
     out = {"pulledAt": now.isoformat(timespec="seconds"), "source": SOURCE, "games": [], "props": [],
-           "curves": {}}
+           "method": "market-ladder"}
     meta_sample = None
     used = 0
-    raw, samples = [], {}
+    raw = []
     for lg, (cap, days) in CAPS.items():
         events = pull(lg, cap, days, now)
         used += len(events)
@@ -317,26 +328,10 @@ def main():
                     continue
                 u = odds.get(o.get("opposingOddID") or "") or {}
                 raw.append((lg, ev, home, away, gid, start, players, o, u))
-                pts = two_sided_points(o, u)
-                if pts and o.get("statID") in CURVES:
-                    samples.setdefault(o.get("statID"), []).append(pts)
-
-    # fit each stat's spread to tonight's two-sided rungs (needs 15+ points)
-    cvs, fits = dict(CURVES), {}
-    for stat, smp in samples.items():
-        smp = smp[:60]
-        n = sum(len(x[2]) for x in smp)
-        if n >= 15:
-            cv, rmse = fit_cv(smp, CURVES[stat])
-            cvs[stat] = cv
-            fits[stat] = {"cv": cv, "points": n, "rmsePts": rmse, "fitted": True}
-    for stat in CURVES:
-        fits.setdefault(stat, {"cv": CURVES[stat], "points": sum(len(x[2]) for x in samples.get(stat, [])), "fitted": False})
-    out["curves"] = fits
 
     for lg, ev, home, away, gid, start, players, o, u in raw:
         pid = o.get("playerID")
-        prop = build_prop(o, u, cvs)
+        prop = build_prop(o, u)
         if not prop:
             continue
         pl = players.get(pid) or {}
