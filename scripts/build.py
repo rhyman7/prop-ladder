@@ -44,9 +44,9 @@ BOOKS = {"draftkings": "dk", "fanduel": "fd"}
 FREE_BOOKS = {"draftkings", "fanduel", "caesars", "betmgm", "bovada", "espnbet",
               "pointsbet", "unibet", "williamhill"}
 # WIDE version (Rookie trial, from Nov 24, 2026): the 9 books plus sharper,
-# lower-vig books and exchanges. Where any of these SHARP books posts a rung,
-# its true probability = the median of the sharp books alone; otherwise the
-# median of all WIDE books. Pick'em apps (underdog, sleeper, prizepicks) excluded.
+# lower-vig books and exchanges. Where 2+ SHARP books post a rung (and their
+# median is within 15 points of the all-book median), its true probability =
+# the sharp books' median; otherwise the median of all WIDE books. Pick'em apps (underdog, sleeper, prizepicks) excluded.
 SHARP_BOOKS = {"bookmakereu", "betonline", "lowvig", "novig", "prophetexchange",
                "kalshi", "polymarket", "matchbook", "betfairexchange"}
 WIDE_BOOKS = FREE_BOOKS | SHARP_BOOKS
@@ -188,6 +188,20 @@ def quotes(q):
     return out
 
 
+def monotone(q, side):
+    """Drop quotes that break the book's own ladder order: P(over) must fall as
+    the line rises (P(under) must rise), within 2 points. Guards against stale or
+    junk exchange quotes (Nov 24: Novig LaMelo Ball PRA 44.5 +900 but 49.5 -223)."""
+    keep, last = {}, None
+    for ln in sorted(q):
+        p = imp(q[ln])
+        if last is not None and ((side == "o" and p > last + 0.02) or (side == "u" and p < last - 0.02)):
+            continue
+        keep[ln] = q[ln]
+        last = p
+    return keep
+
+
 def team_info(t):
     n = t.get("names") or {}
     return {"id": t.get("teamID"), "name": n.get("long") or n.get("medium") or t.get("teamID"),
@@ -264,8 +278,8 @@ def build_prop(o, u, books=None, sharp=None):
     is the median across the books posting it."""
     ob, ub = o.get("byBookmaker") or {}, u.get("byBookmaker") or {}
     books = books or FREE_BOOKS
-    oq_all = {b: quotes(q) for b, q in ob.items() if b in books}
-    uq_all = {b: quotes(q) for b, q in ub.items() if b in books}
+    oq_all = {b: monotone(quotes(q), "o") for b, q in ob.items() if b in books}
+    uq_all = {b: monotone(quotes(q), "u") for b, q in ub.items() if b in books}
     if not any(oq_all.get(b) or uq_all.get(b) for b in BOOKS):
         return None
     a = anchor(o, oq_all, uq_all)
@@ -294,11 +308,17 @@ def build_prop(o, u, books=None, sharp=None):
     for ln in sorted(fair):
         per_book = {b: st.mean(v) for b, v in fair[ln].items()}
         sharp_p = [v for b, v in per_book.items() if sharp and b in sharp]
-        use = sharp_p or list(per_book.values())
-        po = min(max(st.median(use), 0.001), 0.999)
+        all_med = st.median(per_book.values())
+        po = all_med
+        # sharp-first only when 2+ sharp books post the rung and they are within
+        # 15 points of the all-book median (else one bad quote can set it)
+        if len(sharp_p) >= 2 and abs(st.median(sharp_p) - all_med) <= 0.15:
+            po = st.median(sharp_p)
+        po = min(max(po, 0.001), 0.999)
         r = {"l": ln, "po": round(po, 4), "pu": round(1 - po, 4), "n": len(per_book), "a": ln == aline}
         if sharp:
             r["ns"] = len(sharp_p)
+            r["sf"] = int(po != min(max(all_med, 0.001), 0.999))
         for b, key in BOOKS.items():
             if ln in oq_all.get(b, {}):
                 r[key + "o"] = oq_all[b][ln]

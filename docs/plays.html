@@ -83,7 +83,7 @@
     for (const p of data.props) {
       if (S.sport !== 'All' && p.sport !== S.sport) continue;
       for (const r of p.rungs) {
-        if (S.basis === 's' ? !r.ns : r.n < S.basis) continue;
+        if (S.basis === 's' ? !r.sf : r.n < S.basis) continue;
         for (const side of ['o', 'u']) {
           const { pW, pL } = PL.sideProbs(r, side);
           for (const bk of ['dk', 'fd']) {
@@ -108,7 +108,7 @@
         <td class="l">${PL.esc(bet)}</td><td class="l">${x.bk === 'dk' ? 'DraftKings' : 'FanDuel'}</td>
         <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
         <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
-        <td class="m">${x.r.n}${x.r.ns ? ' · ' + x.r.ns + ' sharp' : ''}</td>
+        <td class="m">${x.r.n}${x.r.sf ? ' · ' + x.r.ns + ' sharp' : ''}</td>
         <td class="m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) + ' · ' : ''}${PL.when(x.p.start)}</td></tr>`;
     }).join('');
   }

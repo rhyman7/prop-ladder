@@ -84,7 +84,7 @@
         <td class="${s.diff < 0 ? 'pos' : s.diff > 0 ? 'neg' : ''}">${(s.diff >= 0 ? '+' : '−') + Math.abs(s.diff).toFixed(4)}${s.diffSE ? ' <span class="m" style="font-weight:400">± ' + s.diffSE.toFixed(4) + '</span>' : ''}</td><td class="m">${(s.meanGap * 100).toFixed(1)} pts</td></tr>`;
       $('h2h').hidden = false;
       $('h2h').innerHTML = `<h2 class="cardhead">Head-to-head: which true probability is more accurate?</h2>
-        <p class="small" style="margin:6px 16px 0">${H.tracked} rungs where the Wide version used sharp books · ${H.pending} waiting on games. Scored at the last refresh before kickoff (Brier: lower is better).</p>
+        <p class="small" style="margin:6px 16px 0">${H.tracked} rungs where the Wide version used 2+ sharp books · ${H.pending} waiting on games. Scored at the last refresh before kickoff (Brier: lower is better).</p>
         <p class="b" style="margin:8px 16px 4px;font-size:15px">${verdict}</p>
         ${L ? `<div class="scroll"><table class="compact"><thead><tr><th class="l" scope="col">Sport</th><th scope="col">Props</th><th scope="col">Rungs</th><th scope="col">Brier 9-book</th><th scope="col">Brier Wide</th><th scope="col">Wide − 9-book</th><th scope="col">Avg gap</th></tr></thead>
         <tbody>${row(L)}${(H.bySport || []).map(row).join('')}</tbody></table></div>` : ''}`;

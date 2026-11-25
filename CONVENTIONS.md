@@ -54,8 +54,13 @@ logged history to test on (nothing logged yet).
   instead tests a wider, sharper consensus: `docs/wide/` (index, plays), built
   from the same pull by `build.py`: the 9 books + SHARP_BOOKS (BookMaker,
   BetOnline, LowVig, Novig, Prophet Exchange, Kalshi, Polymarket, Matchbook,
-  Betfair Exchange). Where any sharp book posts a rung, true probability = the
-  sharp books' median (`ns` on the rung); otherwise the wide median.
+  Betfair Exchange). Where 2+ sharp books post a rung and their median is within
+  15 points of the all-book median, true probability = the sharp median (`sf`=1,
+  `ns` = sharp books); otherwise the wide median.
+- Both versions drop quotes that break their own book's ladder order
+  (`monotone()` in build.py): Nov 24 a junk Novig quote (LaMelo Ball PRA 49.5
+  at -223 after 44.5 at +900) made 50+ look 66% likely at FanDuel +2200.
+  Logs restarted Nov 24 ~7:50 PM ET after this fix.
 - Pages are generated: edit `docs/index.html` / `docs/plays.html`, then run
   `python scripts/make_wide_pages.py`. Never edit `docs/wide/*.html` by hand.
 - Own play log `data/wide_plays_log.json`, summary `docs/wide/results.json`.

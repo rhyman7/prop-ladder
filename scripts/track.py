@@ -159,7 +159,7 @@ def grade(log, evs, now):
 
 
 def log_compare(compare, cons, wide):
-    """Every rung both versions price where the wide version used sharp books:
+    """Every rung both versions price where the wide version used 2+ sharp books:
     first and last pre-kickoff P(over) from each (c = 9-book, w = wide)."""
     now = parse(wide["pulledAt"])
     cmap = {}
@@ -171,7 +171,7 @@ def log_compare(compare, cons, wide):
         if not p.get("start") or parse(p["start"]) <= now:
             continue
         for r in p["rungs"]:
-            if not r.get("ns") or float(r["l"]).is_integer():
+            if not r.get("sf") or float(r["l"]).is_integer():
                 continue
             key = f'{p["game"]}|{p["pid"]}|{p["stat"]}|{r["l"]}'
             if key not in cmap:
