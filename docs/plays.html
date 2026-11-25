@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrap">
+<div class="wrap full">
   <header>
     <div>
       <h1>All +EV plays</h1>
@@ -25,6 +25,7 @@
     <div class="field"><span class="lbl">Sport</span><div class="pills" id="sports"></div></div>
     <div class="field"><span class="lbl">Book</span><div class="pills" id="books"></div></div>
     <div class="field"><span class="lbl">Minimum edge</span><div class="pills" id="mins"></div></div>
+    <div class="field"><span class="lbl">Price</span><div class="pills" id="prices"></div><span class="hint">Pick one or more ranges</span></div>
     <div class="field"><span class="lbl">Books behind true prob</span><div class="pills" id="basis"></div><span class="hint">More books = a firmer number</span></div>
     <div class="field"><span class="lbl">Profit boost</span><div class="pills" id="boosts"></div></div>
   </section>
@@ -34,11 +35,11 @@
 
   <section class="card tbl" aria-label="Plays">
     <div class="scroll">
-      <table>
+      <table class="fit">
         <thead><tr id="head">
-          <th scope="col" data-k="edge">Edge</th><th scope="col" class="l" data-k="player" data-first="asc">Player</th><th scope="col" class="l" data-k="bet" data-first="asc">Bet</th><th scope="col" class="l" data-k="book" data-first="asc">Book</th>
-          <th scope="col" data-k="price">Price</th><th scope="col" data-k="be">Book implied</th><th scope="col" data-k="p">True prob</th><th scope="col" data-k="ev">EV / $10</th>
-          <th scope="col" data-k="n">Books</th><th scope="col" data-k="game" data-first="asc">Game</th>
+          <th scope="col" data-k="edge">Edge</th><th scope="col" class="l wr" data-k="player" data-first="asc">Player</th><th scope="col" class="l wr" data-k="bet" data-first="asc">Bet</th><th scope="col" class="l" data-k="book" data-first="asc">Book</th>
+          <th scope="col" data-k="price">Price</th><th scope="col" class="wr" data-k="be">Book implied</th><th scope="col" class="wr" data-k="p">True prob</th><th scope="col" data-k="ev">EV / $10</th>
+          <th scope="col" data-k="n">Books</th><th scope="col" class="l" data-k="game" data-first="asc">Game</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -58,7 +59,28 @@
   let data;
   try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
   $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'wide' ? ' · wide (sharp first)' : ' · consensus');
-  const S = { sport: 'All', book: 'Both', min: 0, basis: 2, boost: 0, sort: { key: 'edge', dir: 'desc' } };
+  const S = { sport: 'All', book: 'Both', min: 0, basis: 2, boost: 0, prices: new Set(), sort: { key: 'edge', dir: 'desc' } };
+  // Price ranges (American odds). Several can be on at once; none = all prices.
+  const PRICES = [
+    ['m700', '−700 or less', (a) => a <= -700],
+    ['m500', '−500 to −699', (a) => a <= -500 && a > -700],
+    ['m300', '−300 to −499', (a) => a <= -300 && a > -500],
+    ['m100', '−100 to −299', (a) => a <= -100 && a > -300],
+    ['even', '+100', (a) => a === 100],
+    ['p101', '+101 to +299', (a) => a > 100 && a < 300],
+    ['p300', '+300 or more', (a) => a >= 300],
+  ];
+  function pricePills() {
+    const el = $('prices'); el.innerHTML = '';
+    for (const [value, label] of [['all', 'All'], ...PRICES]) {
+      const b = document.createElement('button');
+      b.className = 'pill'; b.type = 'button'; b.textContent = label;
+      b.setAttribute('aria-pressed', String(value === 'all' ? S.prices.size === 0 : S.prices.has(value)));
+      b.onclick = () => { if (value === 'all') S.prices.clear(); else if (S.prices.has(value)) S.prices.delete(value); else S.prices.add(value); render(); };
+      el.appendChild(b);
+    }
+  }
+  const priceOk = (a) => S.prices.size === 0 || PRICES.some(([v, , f]) => S.prices.has(v) && f(a));
   const games = new Map(data.games.map((g) => [g.id, g]));
   const MAX_ROWS = 300;
 
@@ -79,6 +101,7 @@
     pills($('mins'), 'min', [[0, 'Any'], [1, '1%+'], [2, '2%+'], [3, '3%+']]);
     pills($('basis'), 'basis', [[1, 'Any'], [2, '2+'], [3, '3+'], [4, '4+']].concat(data.source === 'wide' ? [['s', 'Sharp-priced']] : []));
     pills($('boosts'), 'boost', PL.BOOSTS.map((b) => [b, b ? b + '%' : 'None']));
+    pricePills();
     const B = S.boost / 100, out = [];
     for (const p of data.props) {
       if (S.sport !== 'All' && p.sport !== S.sport) continue;
@@ -89,7 +112,7 @@
           for (const bk of ['dk', 'fd']) {
             if (S.book !== 'Both' && S.book !== bk) continue;
             const odds = r[bk + side];
-            if (odds == null) continue;
+            if (odds == null || !priceOk(odds)) continue;
             const x = PL.price(odds, pW, pL, B);
             if (x.edge > S.min / 100 && x.edge > 0) {
               out.push({ p, r, side, bk, odds, ...x, k: { edge: x.edge, player: p.player, bet: p.statLabel + ' ' + (side === 'o' ? 'O' : 'U') + String(r.l).padStart(6, '0'),
@@ -108,12 +131,12 @@
       const link = 'index.html#' + new URLSearchParams({ sport: x.p.sport, team: x.p.teamName || '', pid: x.p.pid, stat: x.p.stat, side: x.side, boost: S.boost }).toString();
       const bet = (x.side === 'o' ? 'Over ' : 'Under ') + x.r.l + ' ' + x.p.statLabel.toLowerCase() + ' (' + PL.rungLabel(x.r.l, x.side) + ')';
       return `<tr><td><span class="chip">${PL.signedPct(x.edge)}</span></td>
-        <td class="l"><a class="b" style="color:#111827" href="${link}">${PL.esc(x.p.player)}</a> <span class="m">${PL.esc(x.p.team || '')}</span></td>
-        <td class="l">${PL.esc(bet)}</td><td class="l">${x.bk === 'dk' ? 'DraftKings' : 'FanDuel'}</td>
+        <td class="l wr"><a class="b" style="color:#111827" href="${link}">${PL.esc(x.p.player)}</a> <span class="m">${PL.esc(x.p.team || '')}</span></td>
+        <td class="l wr">${PL.esc(bet)}</td><td class="l">${x.bk === 'dk' ? 'DraftKings' : 'FanDuel'}</td>
         <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
         <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
         <td class="m">${x.r.n}${x.r.sf ? ' · ' + x.r.ns + ' sharp' : ''}</td>
-        <td class="m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) + ' · ' : ''}${PL.when(x.p.start)}</td></tr>`;
+        <td class="l m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) : ''}<span class="sub2">${PL.when(x.p.start)}</span></td></tr>`;
     }).join('');
   }
   render();
