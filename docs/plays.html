@@ -38,7 +38,7 @@
 
   <section class="card tbl" aria-label="Plays">
     <div class="scroll">
-      <table class="fit">
+      <table class="fit m-plays">
         <thead><tr id="head">
           <th scope="col" data-k="edge">Edge</th><th scope="col" class="l wr" data-k="player" data-first="asc">Player</th><th scope="col" class="l wr" data-k="bet" data-first="asc">Bet</th><th scope="col" class="l" data-k="book" data-first="asc">Book</th>
           <th scope="col" data-k="price">Price</th><th scope="col" class="wr" data-k="be">Book implied</th><th scope="col" class="wr" data-k="p">True prob</th><th scope="col" data-k="ev">EV / $10</th>
@@ -47,6 +47,7 @@
         <tbody id="rows"></tbody>
       </table>
     </div>
+    <p class="m-more"><button class="pill" type="button" onclick="document.getElementById('rows').classList.add('all'); this.parentElement.remove()">Show all plays</button></p>
     <p class="empty" id="empty" hidden>No rung clears this filter. Lower the minimum edge or add a boost.</p>
   </section>
 

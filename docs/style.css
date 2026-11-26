@@ -63,3 +63,33 @@ th[aria-sort=ascending],th[aria-sort=descending]{color:var(--ink)}
 .sub2{display:block;font-size:12px;color:var(--faint)}
 .fit th.wr{min-width:0;line-height:1.25}
 .fit th.wr .sort{white-space:normal;text-align:inherit}
+
+/* ---- phones: every table as one card per row (labels come from the rules below, so a column
+   added, removed or reordered in a table means updating its labels here) ---- */
+.m-more{display:none}
+@media (max-width:760px){
+.m-ladder,.m-plays,table.compact,.m-ladder tbody,.m-plays tbody tbody,table.compact tbody{display:block}
+.m-ladder thead,.m-plays thead thead,table.compact thead{display:none}
+.m-ladder tr,.m-plays tr tr,table.compact tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;padding:12px 16px;border-top:1px solid var(--line,#E5E7EB)}
+.m-ladder tr:first-child,.m-plays tr:first-child tr:first-child,table.compact tr:first-child{border-top:0}
+.m-ladder th,.m-ladder td,.m-plays td td,table.compact th,table.compact td{display:block;min-width:0;padding:0;text-align:left;white-space:normal;font-size:15px}
+.m-ladder td::before,.m-plays td::before td::before,table.compact td::before{display:block;font-size:11px;font-weight:500;letter-spacing:.02em;color:#6B7280;line-height:1.3}
+td[colspan]{grid-column:1/-1}td[colspan]::before{content:none!important}
+.m-ladder th{font-size:20px;align-self:center}
+.m-ladder td.na:nth-child(n+5){display:none}
+.m-ladder td:nth-child(13){grid-column:1/span 2}
+.m-ladder tr>:nth-child(2)::before{content:"True prob"}.m-ladder tr>:nth-child(3)::before{content:"Fair odds"}.m-ladder tr>:nth-child(4)::before{content:"Books"}.m-ladder tr>:nth-child(5)::before{content:"DK price"}.m-ladder tr>:nth-child(6)::before{content:"DK implied"}.m-ladder tr>:nth-child(7)::before{content:"DK edge"}.m-ladder tr>:nth-child(8)::before{content:"DK EV / $10"}.m-ladder tr>:nth-child(9)::before{content:"FD price"}.m-ladder tr>:nth-child(10)::before{content:"FD implied"}.m-ladder tr>:nth-child(11)::before{content:"FD edge"}.m-ladder tr>:nth-child(12)::before{content:"FD EV / $10"}.m-ladder tr>:nth-child(13)::before{content:"Kalshi (after fee)"}.m-ladder tr>:nth-child(14)::before{content:"Kalshi edge"}.m-ladder tr>:nth-child(15)::before{content:"Kalshi EV / $10"}
+.m-plays tr{grid-template-columns:repeat(3,minmax(0,1fr))}
+.m-plays td:nth-child(1){grid-column:1;grid-row:1;align-self:center}
+.m-plays td:nth-child(2){grid-column:2/-1;grid-row:1;font-size:16px;align-self:center}
+.m-plays td:nth-child(3),.m-plays td:nth-child(10){grid-column:1/-1}
+.m-plays td.wr{min-width:0}
+.m-plays tr>:nth-child(4)::before{content:"Book"}.m-plays tr>:nth-child(5)::before{content:"Price"}.m-plays tr>:nth-child(6)::before{content:"Book implied"}.m-plays tr>:nth-child(7)::before{content:"True prob"}.m-plays tr>:nth-child(8)::before{content:"EV / $10"}.m-plays tr>:nth-child(9)::before{content:"Books"}.m-plays tr>:nth-child(10)::before{content:"Game"}
+.m-plays tbody:not(.all) tr:nth-child(n+26){display:none}
+.m-more{display:block;margin:0;padding:8px 16px 16px}
+
+table.compact tr{grid-template-columns:repeat(3,minmax(0,1fr))}
+table.compact th{grid-column:1/-1;font-size:16px;padding-left:0!important}
+.m-ladder th{padding-left:0!important}.m-ladder .sep,.m-plays .sep{border:0}
+table.compact:has(#hhead) tr>:nth-child(2)::before{content:"Props"}table.compact:has(#hhead) tr>:nth-child(3)::before{content:"Rungs"}table.compact:has(#hhead) tr>:nth-child(4)::before{content:"Brier 9-book"}table.compact:has(#hhead) tr>:nth-child(5)::before{content:"Brier Wide"}table.compact:has(#hhead) tr>:nth-child(6)::before{content:"Wide − 9-book"}table.compact:has(#hhead) tr>:nth-child(7)::before{content:"Avg gap"}table.compact:not(:has(#hhead)) tr>:nth-child(2)::before{content:"Plays"}table.compact:not(:has(#hhead)) tr>:nth-child(3)::before{content:"W-L"}table.compact:not(:has(#hhead)) tr>:nth-child(4)::before{content:"Win %"}table.compact:not(:has(#hhead)) tr>:nth-child(5)::before{content:"Exp."}table.compact:not(:has(#hhead)) tr>:nth-child(6)::before{content:"Profit"}table.compact:not(:has(#hhead)) tr>:nth-child(7)::before{content:"ROI"}table.compact:not(:has(#hhead)) tr>:nth-child(8)::before{content:"CLV"}
+}
