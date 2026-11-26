@@ -1,34 +1,34 @@
 {
  "teams": {
   "home": {
-   "teamID": "DETROIT_LIONS_NFL",
+   "teamID": "DALLAS_COWBOYS_NFL",
    "names": {
-    "long": "Detroit Lions",
-    "medium": "Lions",
-    "short": "DET",
-    "location": "Detroit"
+    "long": "Dallas Cowboys",
+    "medium": "Cowboys",
+    "short": "DAL",
+    "location": "Dallas"
    },
    "colors": {
-    "primary": "#0062AB",
-    "secondary": "#BDBEBE",
-    "primaryContrast": "#FFFFFF",
-    "secondaryContrast": "#000000"
+    "primary": "#212A52",
+    "secondary": "#C3C2C7",
+    "primaryContrast": "#C3C2C7",
+    "secondaryContrast": "#212A52"
    },
    "statEntityID": "home"
   },
   "away": {
-   "teamID": "CHICAGO_BEARS_NFL",
+   "teamID": "PHILADELPHIA_EAGLES_NFL",
    "names": {
-    "long": "Chicago Bears",
-    "medium": "Bears",
-    "short": "CHI",
-    "location": "Chicago"
+    "long": "Philadelphia Eagles",
+    "medium": "Eagles",
+    "short": "PHI",
+    "location": "Philadelphia"
    },
    "colors": {
-    "primary": "#0B162A",
-    "secondary": "#C83803",
+    "primary": "#013D3D",
+    "secondary": "#FFFFFF",
     "primaryContrast": "#FFFFFF",
-    "secondaryContrast": "#FFFFFF"
+    "secondaryContrast": "#013D3D"
    },
    "statEntityID": "away"
   }
@@ -45,7 +45,7 @@
   "displayShort": "",
   "displayLong": "Upcoming",
   "inBreak": false,
-  "startsAt": "2026-11-26T18:00:00.000Z",
+  "startsAt": "2026-11-26T21:30:00.000Z",
   "previousStartsAt": [],
   "hardStart": true,
   "periods": {
@@ -57,31 +57,31 @@
   "finalized": false
  },
  "players_first3": {
-  "AHMED_HASSANEIN_1_NFL": {
-   "playerID": "AHMED_HASSANEIN_1_NFL",
-   "name": "Ahmed Hassanein",
-   "firstName": "Ahmed",
-   "lastName": "Hassanein",
-   "nickname": "A.Hassanein",
-   "teamID": "DETROIT_LIONS_NFL"
+  "AJANI_CORNELIUS_1_NFL": {
+   "playerID": "AJANI_CORNELIUS_1_NFL",
+   "name": "Ajani Cornelius",
+   "firstName": "Ajani",
+   "lastName": "Cornelius",
+   "nickname": "A.Cornelius",
+   "teamID": "DALLAS_COWBOYS_NFL"
   },
-  "AIDAN_HUTCHINSON_1_NFL": {
-   "playerID": "AIDAN_HUTCHINSON_1_NFL",
-   "name": "Aidan Hutchinson",
-   "firstName": "Aidan",
-   "lastName": "Hutchinson",
-   "nickname": "A.Hutchinson",
-   "teamID": "DETROIT_LIONS_NFL",
-   "status": "ir",
-   "statusDetails": "I.L. - Knee - ACL"
+  "BRITAIN_COVEY_1_NFL": {
+   "playerID": "BRITAIN_COVEY_1_NFL",
+   "name": "Britain Covey",
+   "firstName": "Britain",
+   "lastName": "Covey",
+   "nickname": "B.Covey",
+   "teamID": "PHILADELPHIA_EAGLES_NFL"
   },
-  "AMEN_OGBONGBEMIGA_1_NFL": {
-   "playerID": "AMEN_OGBONGBEMIGA_1_NFL",
-   "name": "Amen Ogbongbemiga",
-   "firstName": "Amen",
-   "lastName": "Ogbongbemiga",
-   "nickname": "A.Ogbongbemiga",
-   "teamID": "DETROIT_LIONS_NFL"
+  "DANNY_GRAY_1_NFL": {
+   "playerID": "DANNY_GRAY_1_NFL",
+   "name": "Danny Gray",
+   "firstName": "Danny",
+   "lastName": "Gray",
+   "nickname": "D.Gray",
+   "teamID": "PHILADELPHIA_EAGLES_NFL",
+   "status": "questionable",
+   "statusDetails": "Undisclosed - Questionable for Week 11 vs. Pittsburgh"
   }
  }
 }
