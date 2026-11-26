@@ -93,12 +93,14 @@
 
     const inTeam = inSport.filter((p) => p.teamName === S.team);
     const players = [...new Map(inTeam.map((p) => [p.pid, p.player])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
-    if (!players.some(([id]) => id === S.pid)) S.pid = players[0] && players[0][0];
-    fill($('player'), players.map(([id, n]) => ({ value: id, label: n })), S.pid);
+    // Pinnacle version: mark (and start on) props Pinnacle actually prices
+    const pinPid = new Set(inTeam.filter((p) => p.pin).map((p) => p.pid));
+    if (!players.some(([id]) => id === S.pid)) S.pid = (players.find(([id]) => pinPid.has(id)) || players[0] || [])[0];
+    fill($('player'), players.map(([id, n]) => ({ value: id, label: n + (pinPid.has(id) ? ' · Pinnacle' : '') })), S.pid);
 
     const forPlayer = inTeam.filter((p) => p.pid === S.pid);
-    if (!forPlayer.some((p) => p.stat === S.stat)) S.stat = forPlayer[0] && forPlayer[0].stat;
-    fill($('stat'), forPlayer.map((p) => ({ value: p.stat, label: p.statLabel })), S.stat);
+    if (!forPlayer.some((p) => p.stat === S.stat)) S.stat = (forPlayer.find((p) => p.pin) || forPlayer[0] || {}).stat;
+    fill($('stat'), forPlayer.map((p) => ({ value: p.stat, label: p.statLabel + (p.pin ? ' · Pinnacle' : '') })), S.stat);
 
     pills($('sides'), [{ label: 'Over', value: 'o' }, { label: 'Under', value: 'u' }], S.side, (v) => { S.side = v; render(); });
     pills($('boosts'), PL.BOOSTS.map((b) => ({ label: b ? b + '%' : 'None', value: b })), S.boost, (v) => { S.boost = v; render(); });
