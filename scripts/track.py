@@ -189,9 +189,9 @@ def log_compare(compare, cons, wide, use=lambda p, r: r.get("sf")):
             c = compare.get(key)
             if c is None:
                 compare[key] = {"s": p["start"], "sp": p["sport"], "c1": cmap[key], "w1": r["po"],
-                                "c": cmap[key], "w": r["po"], "ns": r["ns"], "r": None}
+                                "c": cmap[key], "w": r["po"], "ns": r.get("ns"), "r": None}
             elif c.get("r") is None:
-                c.update(c=cmap[key], w=r["po"], ns=r["ns"])
+                c.update(c=cmap[key], w=r["po"], ns=r.get("ns"))
             n += 1
     return n
 

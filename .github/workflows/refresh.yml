@@ -55,12 +55,14 @@ jobs:
       - name: Log and grade plays
         env:
           SGO_API_KEY: ${{ secrets.SGO_API_KEY }}
-        run: python scripts/track.py | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -o pipefail
+          python scripts/track.py | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          git add docs/data.json docs/results.json docs/compare.json docs/compare_pin.json docs/wide docs/pinnacle data/ coverage/meta_sample.json
+          git add -A docs data coverage/meta_sample.json
           git commit -m "Refresh prices" || echo "nothing to commit"
           git pull --rebase -q && git push
 
