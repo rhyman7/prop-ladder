@@ -138,5 +138,7 @@ Every page (`index.html`, `plays.html`, `results.html`, and the generated wide a
 loads the Weekly Gridiron Board's site bar as the first thing in `<body>`:
 `<script src="/site-bar.js" data-shell="2"></script>`. The script lives in rhyman7/rhyman7.github.io;
 change the bar there. It gives the pages the Back arrow inside the home-screen app. The bar lists
-Prop Ladder under Tools and has no link to Results. The page tabs are styled as
+Prop Ladder under Tools and has no link to Results. Ryan's call (Nov 26, 2026): Results keeps the
+bar, so you can leave it for the rest of the site, but nothing in the site or the app may link to
+Results; it is reached by its address only. The page tabs are styled as
 `nav[aria-label=Pages]` in `style.css`, not bare `nav`, so those styles don't reach the bar.
