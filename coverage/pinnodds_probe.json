@@ -1,0 +1,709 @@
+{
+ "sports": {
+  "Football": {
+   "events": 104,
+   "leagues_top": [
+    [
+     "NCAA",
+     72
+    ],
+    [
+     "NFL",
+     32
+    ]
+   ],
+   "us_events": 104,
+   "special_categories": {
+    "Game Props": 206,
+    "Player Props": 374
+   },
+   "player_props_by_league": {
+    "NFL": 361,
+    "NCAA": 13
+   },
+   "player_props_with_prices_inline": 374,
+   "prop_types_by_league": {
+    "NFL": [
+     [
+      "Total Receptions",
+      82
+     ],
+     [
+      "Total Receiving Yards",
+      82
+     ],
+     [
+      "Total Touchdowns",
+      60
+     ],
+     [
+      "Total Rushing Yards",
+      38
+     ],
+     [
+      "Total Rush Attempts",
+      17
+     ],
+     [
+      "Total Pass Completions",
+      12
+     ],
+     [
+      "Total Passing Yards",
+      12
+     ],
+     [
+      "Total Pass Attempts",
+      12
+     ],
+     [
+      "Total Field Goals",
+      10
+     ],
+     [
+      "Total Touchdown Passes",
+      9
+     ],
+     [
+      "Total Interceptions",
+      8
+     ],
+     [
+      "Jr. Total Receptions",
+      2
+     ],
+     [
+      "Jr. Total Receiving Yards",
+      2
+     ],
+     [
+      "Brown Total Receptions",
+      1
+     ],
+     [
+      "Brown Total Receiving Yards",
+      1
+     ],
+     [
+      "Brown Total Touchdowns",
+      1
+     ],
+     [
+      "III Total Rush Attempts",
+      1
+     ],
+     [
+      "III Total Rushing Yards",
+      1
+     ],
+     [
+      "III Total Pass Completions",
+      1
+     ],
+     [
+      "III Total Passing Yards",
+      1
+     ],
+     [
+      "III Total Pass Attempts",
+      1
+     ],
+     [
+      "III Total Touchdown Passes",
+      1
+     ],
+     [
+      "III Total Interceptions",
+      1
+     ],
+     [
+      "III Total Touchdowns",
+      1
+     ],
+     [
+      "Jr. Total Rushing Yards",
+      1
+     ],
+     [
+      "Sr. Total Rushing Yards",
+      1
+     ],
+     [
+      "Sr. Total Receptions",
+      1
+     ],
+     [
+      "Sr. Total Receiving Yards",
+      1
+     ]
+    ],
+    "NCAA": [
+     [
+      "Total Receiving Yards",
+      6
+     ],
+     [
+      "Total Rushing Yards",
+      3
+     ],
+     [
+      "Total Passing Yards",
+      2
+     ],
+     [
+      "Total Touchdown Passes",
+      2
+     ]
+    ]
+   },
+   "samples": [
+    {
+     "league": "NFL",
+     "parent": "Green Bay Packers @ Los Angeles Rams",
+     "starts": "2026-11-26T01:00:00Z",
+     "special": "Blake Corum Total Rush Attempts",
+     "units": "Rush Attempts",
+     "event_id": 1641020664,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 5000,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641020665,
+          "points": 12.5,
+          "price": 1.961
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641020666,
+          "points": 12.5,
+          "price": 1.892
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NFL",
+     "parent": "Green Bay Packers @ Los Angeles Rams",
+     "starts": "2026-11-26T01:00:00Z",
+     "special": "Blake Corum Total Rushing Yards",
+     "units": "Rushing Yards",
+     "event_id": 1641020667,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 7500,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641020668,
+          "points": 59.5,
+          "price": 1.943
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641020669,
+          "points": 59.5,
+          "price": 1.909
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NFL",
+     "parent": "Green Bay Packers @ Los Angeles Rams",
+     "starts": "2026-11-26T01:00:00Z",
+     "special": "Blake Corum Total Receptions",
+     "units": "Receptions",
+     "event_id": 1641020670,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 3000,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641020671,
+          "points": 1.5,
+          "price": 1.558
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641020672,
+          "points": 1.5,
+          "price": 2.52
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NFL",
+     "parent": "Green Bay Packers @ Los Angeles Rams",
+     "starts": "2026-11-26T01:00:00Z",
+     "special": "Blake Corum Total Receiving Yards",
+     "units": "Receiving Yards",
+     "event_id": 1641020673,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 3000,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641020674,
+          "points": 13.5,
+          "price": 1.925
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641020675,
+          "points": 13.5,
+          "price": 1.925
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NFL",
+     "parent": "Green Bay Packers @ Los Angeles Rams",
+     "starts": "2026-11-26T01:00:00Z",
+     "special": "Chris Brooks Total Rushing Yards",
+     "units": "Rushing Yards",
+     "event_id": 1641020676,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 500,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641020677,
+          "points": 6.5,
+          "price": 1.925
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641020678,
+          "points": 6.5,
+          "price": 1.925
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NFL",
+     "parent": "Green Bay Packers @ Los Angeles Rams",
+     "starts": "2026-11-26T01:00:00Z",
+     "special": "Chris Brooks Total Receptions",
+     "units": "Receptions",
+     "event_id": 1641020679,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 1000,
+        "prices": [
+         {
+          "name": "Under",
+          "participant_id": 1641020681,
+          "points": 1.5,
+          "price": 1.68
+         },
+         {
+          "name": "Over",
+          "participant_id": 1641020680,
+          "points": 1.5,
+          "price": 2.26
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Basketball": {
+   "events": 134,
+   "leagues_top": [
+    [
+     "NCAA",
+     19
+    ],
+    [
+     "FIBA - World Cup Europe Qualification",
+     12
+    ],
+    [
+     "Lithuania - National Basketball League",
+     9
+    ],
+    [
+     "Czech Republic - 1. Liga",
+     9
+    ],
+    [
+     "NBA",
+     8
+    ],
+    [
+     "Europe - Eurocup Women",
+     7
+    ],
+    [
+     "Estonia - I Liiga",
+     5
+    ],
+    [
+     "Mexico - Liga ABE Women",
+     5
+    ],
+    [
+     "Australia - WNBL",
+     4
+    ],
+    [
+     "FIBA - Eurobasket Qualification",
+     4
+    ],
+    [
+     "Chinese Taipei - UBA",
+     4
+    ],
+    [
+     "FIBA - Basketball Africa League",
+     4
+    ],
+    [
+     "FIBA - Asia Cup Qualification",
+     3
+    ],
+    [
+     "Finland - Division 1",
+     3
+    ],
+    [
+     "Mexico - Liga ABE",
+     3
+    ],
+    [
+     "Belgium - Top Division 1",
+     3
+    ],
+    [
+     "Argentina - La Liga",
+     3
+    ],
+    [
+     "Argentina - LLF Women",
+     2
+    ],
+    [
+     "Japan - B.League One",
+     2
+    ],
+    [
+     "Greece - Elite League",
+     2
+    ],
+    [
+     "Chile - LNB Women",
+     2
+    ],
+    [
+     "Bosnia and Herzegovina - Prvenstvo BIH",
+     1
+    ],
+    [
+     "Philippines - NCAA",
+     1
+    ],
+    [
+     "Adriatic League Women",
+     1
+    ],
+    [
+     "Poland - BLK Women",
+     1
+    ]
+   ],
+   "us_events": 28,
+   "special_categories": {
+    "Player Props": 198,
+    "Half": 3,
+    "General": 15
+   },
+   "player_props_by_league": {
+    "NBA": 198
+   },
+   "player_props_with_prices_inline": 198,
+   "prop_types_by_league": {
+    "NBA": [
+     [
+      "Total Points",
+      59
+     ],
+     [
+      "Total Threes Made",
+      43
+     ],
+     [
+      "Total Rebounds",
+      40
+     ],
+     [
+      "Total Assists",
+      26
+     ],
+     [
+      "Total Pts & Rebs & Asts",
+      21
+     ],
+     [
+      "Jr. Total Points",
+      3
+     ],
+     [
+      "Jr. Total Threes Made",
+      2
+     ],
+     [
+      "Jr. Total Rebounds",
+      2
+     ],
+     [
+      "Jr. Total Assists",
+      1
+     ],
+     [
+      "Jr. Total Pts & Rebs & Asts",
+      1
+     ]
+    ]
+   },
+   "samples": [
+    {
+     "league": "NBA",
+     "parent": "San Antonio Spurs @ Portland Trail Blazers",
+     "starts": "2026-11-26T03:10:00Z",
+     "special": "Damian Lillard Total Threes Made",
+     "units": "Threes Made",
+     "event_id": 1641137190,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 250,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641137191,
+          "points": 2.5,
+          "price": 1.613
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641137192,
+          "points": 2.5,
+          "price": 2.22
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NBA",
+     "parent": "San Antonio Spurs @ Portland Trail Blazers",
+     "starts": "2026-11-26T03:10:00Z",
+     "special": "Damian Lillard Total Assists",
+     "units": "Assists",
+     "event_id": 1641137193,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 250,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641137194,
+          "points": 3.5,
+          "price": 1.649
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641137195,
+          "points": 3.5,
+          "price": 2.16
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NBA",
+     "parent": "San Antonio Spurs @ Portland Trail Blazers",
+     "starts": "2026-11-26T03:10:00Z",
+     "special": "Damian Lillard Total Points",
+     "units": "Points",
+     "event_id": 1641137196,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 250,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641137197,
+          "points": 20.5,
+          "price": 1.892
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641137198,
+          "points": 20.5,
+          "price": 1.847
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NBA",
+     "parent": "San Antonio Spurs @ Portland Trail Blazers",
+     "starts": "2026-11-26T03:10:00Z",
+     "special": "Damian Lillard Total Pts & Rebs & Asts",
+     "units": "Pts & Rebs & Asts",
+     "event_id": 1641137199,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 250,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641137200,
+          "points": 27.5,
+          "price": 1.847
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641137201,
+          "points": 27.5,
+          "price": 1.892
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NBA",
+     "parent": "San Antonio Spurs @ Portland Trail Blazers",
+     "starts": "2026-11-26T03:10:00Z",
+     "special": "Damian Lillard Total Rebounds",
+     "units": "Rebounds",
+     "event_id": 1641137206,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 250,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641137207,
+          "points": 3.5,
+          "price": 2.25
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641137208,
+          "points": 3.5,
+          "price": 1.598
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "league": "NBA",
+     "parent": "San Antonio Spurs @ Portland Trail Blazers",
+     "starts": "2026-11-26T03:10:00Z",
+     "special": "De'Aaron Fox Total Threes Made",
+     "units": "Threes Made",
+     "event_id": 1641137213,
+     "special_markets": {
+      "num_0": [
+       {
+        "type": "total",
+        "key": "s;0;ou",
+        "side": null,
+        "max_risk": 250,
+        "prices": [
+         {
+          "name": "Over",
+          "participant_id": 1641137214,
+          "points": 1.5,
+          "price": 2.43
+         },
+         {
+          "name": "Under",
+          "participant_id": 1641137215,
+          "points": 1.5,
+          "price": 1.518
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "requests_used": 2
+}
