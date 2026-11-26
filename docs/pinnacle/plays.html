@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>All +EV plays · Pinnacle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../style.css">
 </head>
 <body>
@@ -163,11 +163,11 @@
       const link = 'index.html#' + new URLSearchParams({ sport: x.p.sport, team: x.p.teamName || '', pid: x.p.pid, stat: x.p.stat, side: x.side, boost: S.boost }).toString();
       const bet = (x.side === 'o' ? 'Over ' : 'Under ') + x.r.l + ' ' + x.p.statLabel.toLowerCase() + ' (' + PL.rungLabel(x.r.l, x.side) + ')';
       return `<tr><td><span class="chip">${PL.signedPct(x.edge)}</span></td>
-        <td class="l wr"><a class="b" style="color:#111827" href="${link}">${PL.esc(x.p.player)}</a> <span class="m">${PL.esc(x.p.team || '')}</span></td>
+        <td class="l wr"><a class="b" style="color:var(--ink)" href="${link}">${PL.esc(x.p.player)}</a> <span class="m">${PL.esc(x.p.team || '')}</span></td>
         <td class="l wr">${PL.esc(bet)}</td><td class="l">${({ dk: 'DraftKings', fd: 'FanDuel', ka: 'Kalshi' })[x.bk]}${x.bk === 'ka' ? `<span class="sub2">${x.side === 'o' ? 'Yes' : 'No'} ${x.r['kp' + x.side]}¢ + fee</span>` : ''}</td>
         <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
-        <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
-        <td class="m">${x.r.n}${x.r.sf ? ' · ' + x.r.ns + ' sharp' : ''}${x.p.pin ? '<span class="sub2" style="color:#1E3A8A;font-weight:600">Pinnacle</span>' : x.p.anchor.n < 2 ? '<span class="sub2" style="color:#9A3412;font-weight:600">1 source</span>' : ''}</td>
+        <td class="b" style="color:var(--plus)">${PL.money(x.ev)}</td>
+        <td class="m">${x.r.n}${x.r.sf ? ' · ' + x.r.ns + ' sharp' : ''}${x.p.pin ? '<span class="sub2" style="color:var(--plus);font-weight:600">Pinnacle</span>' : x.p.anchor.n < 2 ? '<span class="sub2" style="color:var(--minus);font-weight:600">1 source</span>' : ''}</td>
         <td class="l m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) : ''}<span class="sub2">${PL.when(x.p.start)}</span></td></tr>`;
     }).join('');
   }
