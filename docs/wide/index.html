@@ -66,6 +66,15 @@
   const props = data.props;
   const h = new URLSearchParams(location.hash.slice(1));
   const S = { sport: h.get('sport'), team: h.get('team'), pid: h.get('pid'), stat: h.get('stat'), side: h.get('side') || 'o', boost: +(h.get('boost') || 0), sort: { key: 'rung', dir: 'asc' } };
+  // A link from another page can name the player instead of giving our feed's id (#sport=NFL&player=Jahmyr+Gibbs):
+  // land on him if his props are posted, otherwise say so and open the sport as usual.
+  const norm = (n) => String(n || '').toLowerCase().replace(/-/g, ' ').replace(/[^a-z ]/g, '').split(/\s+/).filter((w) => w && !['jr', 'sr', 'ii', 'iii', 'iv', 'v'].includes(w)).join(' ');
+  let missing = '';
+  if (h.get('player') && !S.pid) {
+    const want = norm(h.get('player')), hit = props.find((p) => (!S.sport || p.sport === S.sport) && norm(p.player) === want);
+    if (hit) { S.sport = hit.sport; S.team = hit.teamName; S.pid = hit.pid; } else missing = h.get('player');
+  }
+  for (const ev of ['click', 'change']) document.querySelector('.controls').addEventListener(ev, () => { missing = ''; }, true);   // the note goes once the reader picks something
 
   const uniq = (xs) => [...new Set(xs)];
   function pills(el, items, cur, onPick) {
@@ -144,8 +153,9 @@
     });
     PL.sortHeaders($('head'), S, () => table(prop));
     const isPin = data.source === 'pinnacle';
-    $('msg').innerHTML = isPin && !prop.pin ? `<p class="warn"><b>No Pinnacle line</b> for this prop, so these are the 9-book numbers. Pinnacle-based props are the ones with a Pinnacle anchor.</p>`
-      : (a.n < 2 && !prop.pin) ? `<p class="warn"><b>1 source:</b> only one book quotes both sides of this prop, so its vig-free number rests on that single book${data.source === 'wide' ? ' (often an exchange)' : ''}. DraftKings, FanDuel and Kalshi prices below are real, but treat the true probabilities and edges as rough.</p>` : '';
+    const miss = missing ? `<p class="warn" style="margin-bottom:8px">No props are posted for ${PL.esc(missing)} right now, so this is another player. Pick one above.</p>` : '';
+    $('msg').innerHTML = miss + (isPin && !prop.pin ? `<p class="warn"><b>No Pinnacle line</b> for this prop, so these are the 9-book numbers. Pinnacle-based props are the ones with a Pinnacle anchor.</p>`
+      : (a.n < 2 && !prop.pin) ? `<p class="warn"><b>1 source:</b> only one book quotes both sides of this prop, so its vig-free number rests on that single book${data.source === 'wide' ? ' (often an exchange)' : ''}. DraftKings, FanDuel and Kalshi prices below are real, but treat the true probabilities and edges as rough.</p>` : '');
     $('rows').innerHTML = PL.sortRows(rows, S.sort).map((x) => x.html).join('') || '<tr><td class="l" colspan="15">Neither book offers this side.</td></tr>';
     const curveTxt = isPin && prop.pin
       ? `Pinnacle sets the anchor; every rung is the 9-book market ladder shifted to match Pinnacle at its line`

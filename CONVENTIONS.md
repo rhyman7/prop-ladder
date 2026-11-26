@@ -166,3 +166,10 @@ inside the tool, and the shared bar does not list them.
 The same change repaired the phone rules for All +EV plays and the Results summaries: doubled
 selectors (`.m-plays tbody tbody`, `td::before td::before`) had left those tables as plain tables
 on a phone.
+
+## Links in by player name (Nov 26, 2026)
+
+`index.html#sport=NFL&player=Jahmyr+Gibbs` lands on that player (name matched without case,
+punctuation or Jr/III) when his props are posted, on any of the three versions. If none are posted
+the page opens as usual with a note saying so; the note goes when the reader picks something. The
+value boards' player cards link this way, since they do not have the feed's player id.
