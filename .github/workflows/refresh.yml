@@ -48,6 +48,10 @@ jobs:
         run: python scripts/build.py | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Add Kalshi prices (public API, no key)
         run: python scripts/kalshi.py | tee -a "$GITHUB_STEP_SUMMARY" || echo "Kalshi step failed; continuing without Kalshi"
+      - name: Pinnacle version (PinnOdds, 2 requests)
+        env:
+          PINNODDS_API_KEY: ${{ secrets.PINNODDS_API_KEY }}
+        run: python scripts/pinnacle.py | tee -a "$GITHUB_STEP_SUMMARY" || echo "Pinnacle step failed; keeping the last Pinnacle file"
       - name: Log and grade plays
         env:
           SGO_API_KEY: ${{ secrets.SGO_API_KEY }}
@@ -56,7 +60,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          git add docs/data.json docs/results.json docs/compare.json docs/wide data/ coverage/meta_sample.json
+          git add docs/data.json docs/results.json docs/compare.json docs/compare_pin.json docs/wide docs/pinnacle data/ coverage/meta_sample.json
           git commit -m "Refresh prices" || echo "nothing to commit"
           git pull --rebase -q && git push
 

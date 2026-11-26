@@ -61,8 +61,8 @@
   const $ = (id) => document.getElementById(id);
   let data;
   try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
-  $('stamp').textContent = PL.stamp(data.pulledAt) + (data.source === 'wide' ? ' · wide (sharp first)' : ' · consensus');
-  const S = { sport: 'All', book: 'Both', min: 0, basis: 2, boost: 0, prices: new Set(), team: '', sort: { key: 'edge', dir: 'desc' } };
+  $('stamp').textContent = PL.stamp(data.pulledAt) + ({ wide: ' · wide (sharp first)', pinnacle: ' · Pinnacle' }[data.source] || ' · consensus');
+  const S = { sport: 'All', book: 'Both', min: 0, basis: data.source === 'pinnacle' ? 'p' : 2, boost: 0, prices: new Set(), team: '', sort: { key: 'edge', dir: 'desc' } };
   // Price ranges (American odds). Several can be on at once; none = all prices.
   const PRICES = [
     ['m700', '−700 or less', (a) => a <= -700],
@@ -111,7 +111,7 @@
     }
     pills($('books'), 'book', [['Both', 'All'], ['dk', 'DK'], ['fd', 'FD'], ['ka', 'Kalshi']]);
     pills($('mins'), 'min', [[0, 'Any'], [1, '1%+'], [2, '2%+'], [3, '3%+']]);
-    pills($('basis'), 'basis', [[1, 'Any'], [2, '2+'], [3, '3+'], [4, '4+']].concat(data.source === 'wide' ? [['s', 'Sharp-priced']] : []));
+    pills($('basis'), 'basis', [[1, 'Any'], [2, '2+'], [3, '3+'], [4, '4+']].concat(data.source === 'wide' ? [['s', 'Sharp-priced']] : data.source === 'pinnacle' ? [['p', 'Pinnacle-priced']] : []));
     pills($('boosts'), 'boost', PL.BOOSTS.map((b) => [b, b ? b + '%' : 'None']));
     pricePills();
     const B = S.boost / 100, out = [];
@@ -119,7 +119,7 @@
       if (S.sport !== 'All' && p.sport !== S.sport) continue;
       if (S.team && p.teamName !== S.team) continue;
       for (const r of p.rungs) {
-        if (S.basis === 's' ? !r.sf : r.n < S.basis) continue;
+        if (S.basis === 's' ? !r.sf : S.basis === 'p' ? !p.pin : r.n < S.basis) continue;
         for (const side of ['o', 'u']) {
           const { pW, pL } = PL.sideProbs(r, side);
           for (const bk of ['dk', 'fd', 'ka']) {
@@ -148,7 +148,7 @@
         <td class="l wr">${PL.esc(bet)}</td><td class="l">${({ dk: 'DraftKings', fd: 'FanDuel', ka: 'Kalshi' })[x.bk]}${x.bk === 'ka' ? `<span class="sub2">${x.side === 'o' ? 'Yes' : 'No'} ${x.r['kp' + x.side]}¢ + fee</span>` : ''}</td>
         <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
         <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
-        <td class="m">${x.r.n}${x.r.sf ? ' · ' + x.r.ns + ' sharp' : ''}${x.p.anchor.n < 2 ? '<span class="sub2" style="color:#9A3412;font-weight:600">1 source</span>' : ''}</td>
+        <td class="m">${x.r.n}${x.r.sf ? ' · ' + x.r.ns + ' sharp' : ''}${x.p.pin ? '<span class="sub2" style="color:#1E3A8A;font-weight:600">Pinnacle</span>' : x.p.anchor.n < 2 ? '<span class="sub2" style="color:#9A3412;font-weight:600">1 source</span>' : ''}</td>
         <td class="l m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) : ''}<span class="sub2">${PL.when(x.p.start)}</span></td></tr>`;
     }).join('');
   }

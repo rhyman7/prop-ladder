@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All +EV plays · Pinnacle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="wrap full">
+  <header>
+    <div>
+      <h1>All +EV plays <span class="tag dark" style="font-size:14px;vertical-align:middle">Pinnacle</span></h1>
+      <p class="sub">Every rung where the true probability beats the book's implied probability, best edge first.</p>
+    </div>
+    <div class="hdr-right">
+      <nav aria-label="Pages"><a href="index.html">Prop Ladder</a><a href="plays.html" aria-current="page">All +EV plays</a></nav>
+      <p class="stamp" id="stamp">Loading prices…</p>
+    </div>
+  </header>
+
+  <section class="card controls" aria-label="Filters">
+    <div class="field"><span class="lbl">Sport</span><div class="pills" id="sports"></div></div>
+    <div class="field" id="teamField" hidden style="min-width:220px"><label class="lbl" for="team">Team</label><select id="team"></select><span class="hint">Plays for that team's players</span></div>
+    <div class="field"><span class="lbl">Book</span><div class="pills" id="books"></div></div>
+    <div class="field"><span class="lbl">Minimum edge</span><div class="pills" id="mins"></div></div>
+    <div class="field"><span class="lbl">Price</span><div class="pills" id="prices"></div><span class="hint">Pick one or more ranges</span></div>
+    <div class="field"><span class="lbl">Books behind true prob</span><div class="pills" id="basis"></div><span class="hint">More books = a firmer number</span></div>
+    <div class="field"><span class="lbl">Profit boost</span><div class="pills" id="boosts"></div></div>
+  </section>
+
+  <div id="msg"></div>
+  <p class="b" style="margin:0;font-size:15px" id="count"></p>
+
+  <section class="card tbl" aria-label="Plays">
+    <div class="scroll">
+      <table class="fit">
+        <thead><tr id="head">
+          <th scope="col" data-k="edge">Edge</th><th scope="col" class="l wr" data-k="player" data-first="asc">Player</th><th scope="col" class="l wr" data-k="bet" data-first="asc">Bet</th><th scope="col" class="l" data-k="book" data-first="asc">Book</th>
+          <th scope="col" data-k="price">Price</th><th scope="col" class="wr" data-k="be">Book implied</th><th scope="col" class="wr" data-k="p">True prob</th><th scope="col" data-k="ev">EV / $10</th>
+          <th scope="col" data-k="n">Books</th><th scope="col" class="l" data-k="game" data-first="asc">Game</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="empty" hidden>No rung clears this filter. Lower the minimum edge or add a boost.</p>
+  </section>
+
+  <footer class="legend">
+    <span>Edge = true prob − book implied (after the boost). Click a player for the full ladder.</span>
+    <span>"1 source" = only one book quotes both sides of that prop, so its true probability rests on that single book. Treat those edges as rough.</span>
+    <span>Kalshi (NFL and NBA only): price includes Kalshi's taker fee; no boosts. If the player doesn't play, Kalshi settles No: Overs lose.</span>
+    <span>True prob = median of the books posting that rung, each with its own vig removed. Untested so far: logging results will show how well it holds.</span>
+  </footer>
+</div>
+<script src="../common.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  let data;
+  try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
+  $('stamp').textContent = PL.stamp(data.pulledAt) + ({ wide: ' · wide (sharp first)', pinnacle: ' · Pinnacle' }[data.source] || ' · consensus');
+  const S = { sport: 'All', book: 'Both', min: 0, basis: data.source === 'pinnacle' ? 'p' : 2, boost: 0, prices: new Set(), team: '', sort: { key: 'edge', dir: 'desc' } };
+  // Price ranges (American odds). Several can be on at once; none = all prices.
+  const PRICES = [
+    ['m700', '−700 or less', (a) => a <= -700],
+    ['m500', '−500 to −699', (a) => a <= -500 && a > -700],
+    ['m300', '−300 to −499', (a) => a <= -300 && a > -500],
+    ['m100', '−100 to −299', (a) => a <= -100 && a > -300],
+    ['even', '+100', (a) => a === 100],
+    ['p101', '+101 to +299', (a) => a > 100 && a < 300],
+    ['p300', '+300 or more', (a) => a >= 300],
+  ];
+  function pricePills() {
+    const el = $('prices'); el.innerHTML = '';
+    for (const [value, label] of [['all', 'All'], ...PRICES]) {
+      const b = document.createElement('button');
+      b.className = 'pill'; b.type = 'button'; b.textContent = label;
+      b.setAttribute('aria-pressed', String(value === 'all' ? S.prices.size === 0 : S.prices.has(value)));
+      b.onclick = () => { if (value === 'all') S.prices.clear(); else if (S.prices.has(value)) S.prices.delete(value); else S.prices.add(value); render(); };
+      el.appendChild(b);
+    }
+  }
+  const priceOk = (a) => S.prices.size === 0 || PRICES.some(([v, , f]) => S.prices.has(v) && f(a));
+  const games = new Map(data.games.map((g) => [g.id, g]));
+  const MAX_ROWS = 300;
+
+  function pills(el, key, items) {
+    el.innerHTML = '';
+    for (const [value, label] of items) {
+      const b = document.createElement('button');
+      b.className = 'pill'; b.type = 'button'; b.textContent = label;
+      b.setAttribute('aria-pressed', String(S[key] === value));
+      b.onclick = () => { S[key] = value; render(); };
+      el.appendChild(b);
+    }
+  }
+
+  $('team').onchange = (e) => { S.team = e.target.value; render(); };
+  let lastSport = null;
+  function render() {
+    if (S.sport !== lastSport) { S.team = ''; lastSport = S.sport; }
+    pills($('sports'), 'sport', [['All', 'All'], ...PL.SPORTS.map((s) => [s, s])]);
+    $('teamField').hidden = S.sport === 'All';
+    if (S.sport !== 'All') {
+      const teams = [...new Set(data.props.filter((p) => p.sport === S.sport).map((p) => p.teamName).filter(Boolean))].sort();
+      if (S.team && !teams.includes(S.team)) S.team = '';
+      $('team').innerHTML = '<option value="">All teams</option>' + teams.map((t) => `<option value="${PL.esc(t)}"${t === S.team ? ' selected' : ''}>${PL.esc(t)}</option>`).join('');
+    }
+    pills($('books'), 'book', [['Both', 'All'], ['dk', 'DK'], ['fd', 'FD'], ['ka', 'Kalshi']]);
+    pills($('mins'), 'min', [[0, 'Any'], [1, '1%+'], [2, '2%+'], [3, '3%+']]);
+    pills($('basis'), 'basis', [[1, 'Any'], [2, '2+'], [3, '3+'], [4, '4+']].concat(data.source === 'wide' ? [['s', 'Sharp-priced']] : data.source === 'pinnacle' ? [['p', 'Pinnacle-priced']] : []));
+    pills($('boosts'), 'boost', PL.BOOSTS.map((b) => [b, b ? b + '%' : 'None']));
+    pricePills();
+    const B = S.boost / 100, out = [];
+    for (const p of data.props) {
+      if (S.sport !== 'All' && p.sport !== S.sport) continue;
+      if (S.team && p.teamName !== S.team) continue;
+      for (const r of p.rungs) {
+        if (S.basis === 's' ? !r.sf : S.basis === 'p' ? !p.pin : r.n < S.basis) continue;
+        for (const side of ['o', 'u']) {
+          const { pW, pL } = PL.sideProbs(r, side);
+          for (const bk of ['dk', 'fd', 'ka']) {
+            if (S.book !== 'Both' && S.book !== bk) continue;
+            const odds = r[bk + side];
+            if (odds == null || !priceOk(odds)) continue;
+            const x = PL.price(odds, pW, pL, bk === 'ka' ? 0 : B);   // no boosts on Kalshi
+            if (x.edge > S.min / 100 && x.edge > 0) {
+              out.push({ p, r, side, bk, odds, ...x, k: { edge: x.edge, player: p.player, bet: p.statLabel + ' ' + (side === 'o' ? 'O' : 'U') + String(r.l).padStart(6, '0'),
+                book: bk, price: PL.payout(odds), be: x.be, p: x.pTrue, ev: x.ev, n: r.n, game: p.start || '' } });
+            }
+          }
+        }
+      }
+    }
+    PL.sortHeaders($('head'), S, render);
+    const sorted = PL.sortRows(out, S.sort);
+    $('count').textContent = out.length + (out.length === 1 ? ' play' : ' plays') + (S.boost ? ` with a ${S.boost}% boost` : '') + (out.length > MAX_ROWS ? ` (showing the top ${MAX_ROWS})` : '');
+    $('empty').hidden = out.length > 0;
+    $('rows').innerHTML = sorted.slice(0, MAX_ROWS).map((x) => {
+      const g = games.get(x.p.game);
+      const link = 'index.html#' + new URLSearchParams({ sport: x.p.sport, team: x.p.teamName || '', pid: x.p.pid, stat: x.p.stat, side: x.side, boost: S.boost }).toString();
+      const bet = (x.side === 'o' ? 'Over ' : 'Under ') + x.r.l + ' ' + x.p.statLabel.toLowerCase() + ' (' + PL.rungLabel(x.r.l, x.side) + ')';
+      return `<tr><td><span class="chip">${PL.signedPct(x.edge)}</span></td>
+        <td class="l wr"><a class="b" style="color:#111827" href="${link}">${PL.esc(x.p.player)}</a> <span class="m">${PL.esc(x.p.team || '')}</span></td>
+        <td class="l wr">${PL.esc(bet)}</td><td class="l">${({ dk: 'DraftKings', fd: 'FanDuel', ka: 'Kalshi' })[x.bk]}${x.bk === 'ka' ? `<span class="sub2">${x.side === 'o' ? 'Yes' : 'No'} ${x.r['kp' + x.side]}¢ + fee</span>` : ''}</td>
+        <td class="b">${PL.fmtOdds(x.odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="b">${PL.pct(x.pTrue)}</td>
+        <td class="b" style="color:#1E3A8A">${PL.money(x.ev)}</td>
+        <td class="m">${x.r.n}${x.r.sf ? ' · ' + x.r.ns + ' sharp' : ''}${x.p.pin ? '<span class="sub2" style="color:#1E3A8A;font-weight:600">Pinnacle</span>' : x.p.anchor.n < 2 ? '<span class="sub2" style="color:#9A3412;font-weight:600">1 source</span>' : ''}</td>
+        <td class="l m">${g ? PL.esc(g.away.abbr + ' @ ' + g.home.abbr) : ''}<span class="sub2">${PL.when(x.p.start)}</span></td></tr>`;
+    }).join('');
+  }
+  render();
+})();
+</script>
+</body>
+</html>

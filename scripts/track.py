@@ -63,12 +63,14 @@ def get(params):
             return {"error": repr(e)}
 
 
-def log_plays(log, data):
+def log_plays(log, data, only=None):
     now = parse(data["pulledAt"])
     added = updated = 0
     for p in data["props"]:
         if not p.get("start") or parse(p["start"]) <= now:
             continue
+        if only == "pin" and not p.get("pin"):
+            continue   # Pinnacle log: only props Pinnacle actually prices
         for r in p["rungs"]:
             for side in ("o", "u"):
                 pw = r["po"] if side == "o" else r["pu"]
@@ -165,9 +167,10 @@ def grade(log, evs, now):
     return graded
 
 
-def log_compare(compare, cons, wide):
-    """Every rung both versions price where the wide version used 2+ sharp books:
-    first and last pre-kickoff P(over) from each (c = 9-book, w = wide)."""
+def log_compare(compare, cons, wide, use=lambda p, r: r.get("sf")):
+    """Every rung both versions price where the other version differs (Wide: 2+
+    sharp books; Pinnacle: Pinnacle prices the prop): first and last
+    pre-kickoff P(over) from each (c = 9-book, w = the other version)."""
     now = parse(wide["pulledAt"])
     cmap = {}
     for p in cons["props"]:
@@ -178,7 +181,7 @@ def log_compare(compare, cons, wide):
         if not p.get("start") or parse(p["start"]) <= now:
             continue
         for r in p["rungs"]:
-            if not r.get("sf") or float(r["l"]).is_integer():
+            if not use(p, r) or float(r["l"]).is_integer():
                 continue
             key = f'{p["game"]}|{p["pid"]}|{p["stat"]}|{r["l"]}'
             if key not in cmap:
@@ -336,9 +339,12 @@ def build_results(log, now):
 VERSIONS = [
     ("9-book", "docs/data.json", "data/plays_log.json", "docs/results.json"),
     ("wide", "docs/wide/data.json", "data/wide_plays_log.json", "docs/wide/results.json"),
+    ("pinnacle", "docs/pinnacle/data.json", "data/pin_plays_log.json", "docs/pinnacle/results.json"),
 ]
-COMPARE_LOG = os.path.join(ROOT, "data", "compare_log.json")
-COMPARE_OUT = os.path.join(ROOT, "docs", "compare.json")
+COMPARES = [  # (other version, log, summary, which rungs)
+    ("wide", "data/compare_log.json", "docs/compare.json", lambda p, r: r.get("sf")),
+    ("pinnacle", "data/compare_pin_log.json", "docs/compare_pin.json", lambda p, r: p.get("pin")),
+]
 
 
 def load(path, default):
@@ -364,26 +370,30 @@ def main():
         if data is None:
             continue
         log = load(log_p, {})
-        added, updated = log_plays(log, data)
+        added, updated = log_plays(log, data, only="pin" if name == "pinnacle" else None)
         vers.append((name, data, log, log_p, out_p))
         print(f"{name}: logged {added} new plays, updated {updated}")
-    compare = load(COMPARE_LOG, {})
     d = {v[0]: v[1] for v in vers}
-    if "9-book" in d and "wide" in d:
-        print(f"compare: {log_compare(compare, d['9-book'], d['wide'])} rungs updated, {len(compare)} tracked")
-    fetched = 0
+    comps = []
+    for other, log_p, out_p, use in COMPARES:
+        comp = load(log_p, {})
+        if "9-book" in d and other in d:
+            print(f"compare {other}: {log_compare(comp, d['9-book'], d[other], use)} rungs updated, {len(comp)} tracked")
+        comps.append((other, comp, log_p, out_p))
     if KEY:
-        games = due_games([v[2] for v in vers], compare, now)
+        games = due_games([v[2] for v in vers], {k: v for _, c, _, _ in comps for k, v in c.items()}, now)
         evs = fetch_events(games) if games else {}
-        fetched = len(evs)
         for name, data, log, log_p, out_p in vers:
             print(f"{name}: graded {grade(log, evs, now)}")
-        print(f"compare: graded {grade_compare(compare, evs)} rungs; {fetched} SGO objects")
+        for other, comp, _, _ in comps:
+            print(f"compare {other}: graded {grade_compare(comp, evs)} rungs")
+        print(f"{len(evs)} SGO objects for grading")
     for name, data, log, log_p, out_p in vers:
         save(log_p, log)
         save(out_p, build_results(log, now))
-    save(COMPARE_LOG, compare)
-    save(COMPARE_OUT, compare_summary(compare, now))
+    for other, comp, log_p, out_p in comps:
+        save(log_p, comp)
+        save(out_p, compare_summary(comp, now))
 
 
 if __name__ == "__main__":

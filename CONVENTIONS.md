@@ -80,6 +80,23 @@ logged history to test on (nothing logged yet).
 - Decision at day 6 (Nov 30 - Dec 1) from the head-to-head; profit after a week
   is noise and is not the yardstick.
 
+## Pinnacle version (added Nov 25, 2026)
+
+- Pages `docs/pinnacle/` (generated with the wide pages by
+  `scripts/make_wide_pages.py`), data `docs/pinnacle/data.json` from
+  `scripts/pinnacle.py`: PinnOdds (unofficial Pinnacle feed, "not affiliated
+  with Pinnacle"), key `PINNODDS_API_KEY`, 2 requests a run (Football and
+  Basketball fixtures with `include_specials=nested`; prices come inline).
+- Pinnacle posts ONE line per prop (both sides). Its vig is removed (power
+  method) and the 9-book market ladder is shifted in log-odds so it matches
+  Pinnacle exactly at Pinnacle's line (`pin.shift`). NFL and NBA only (13 NCAA
+  football props and no college basketball on Nov 25). Props Pinnacle doesn't
+  price keep the 9-book numbers with `pin: null` and are flagged.
+- Own play log `data/pin_plays_log.json` (Pinnacle-priced props only) ->
+  `docs/pinnacle/results.json`; head-to-head vs 9-book `data/compare_pin_log.json`
+  -> `docs/compare_pin.json`; Results page `?v=pin`.
+- Pinnacle's NBA prop limits are low (~$250) vs NFL ($3,000-7,500).
+
 ## Kalshi (added Nov 25, 2026)
 
 - `scripts/kalshi.py` runs after `build.py`: Kalshi's public API (no key, works

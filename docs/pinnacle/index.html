@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prop Ladder · Pinnacle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="wrap full">
+  <header>
+    <div>
+      <h1>Prop Ladder <span class="tag dark" style="font-size:14px;vertical-align:middle">Pinnacle</span></h1>
+      <p class="sub">Pinnacle version (NFL and NBA): Pinnacle's vig-free line sets the true probability, and the market's ladder is shifted to match it at every rung.</p>
+    </div>
+    <div class="hdr-right">
+      <nav aria-label="Pages"><a href="index.html" aria-current="page">Prop Ladder</a><a href="plays.html">All +EV plays</a></nav>
+      <p class="stamp" id="stamp">Loading prices…</p>
+    </div>
+  </header>
+
+  <section class="card controls" aria-label="Choose a prop">
+    <div class="field"><span class="lbl">Sport</span><div class="pills" id="sports"></div></div>
+    <div class="field grow"><label class="lbl" for="team">Team</label><select id="team"></select><span class="hint">Teams with props posted</span></div>
+    <div class="field grow"><label class="lbl" for="player">Player</label><select id="player"></select></div>
+    <div class="field grow"><label class="lbl" for="stat">Stat</label><select id="stat"></select></div>
+    <div class="field"><span class="lbl">Side</span><div class="pills" id="sides"></div></div>
+    <div class="field"><span class="lbl">Profit boost</span><div class="pills" id="boosts"></div></div>
+  </section>
+
+  <div id="msg"></div>
+  <section class="facts" id="facts" aria-label="Where the true probability comes from"></section>
+
+  <section class="card tbl" aria-label="Ladder">
+    <div class="scroll">
+      <table class="fit">
+        <thead><tr id="head">
+          <th scope="col" class="l" data-k="rung" data-first="asc">Rung</th><th class="wr" scope="col" data-k="p">True prob</th><th class="wr" scope="col" data-k="fair">Fair odds</th><th scope="col" class="sep" data-k="n">Books</th>
+          <th class="wr" scope="col" data-k="dkPrice">DK price</th><th class="wr" scope="col" data-k="dkBe">DK implied</th><th class="wr" scope="col" data-k="dkEdge">DK edge</th><th scope="col" class="wr sep" data-k="dkEv">DK EV / $10</th>
+          <th class="wr" scope="col" data-k="fdPrice">FD price</th><th class="wr" scope="col" data-k="fdBe">FD implied</th><th class="wr" scope="col" data-k="fdEdge">FD edge</th><th scope="col" class="wr sep" data-k="fdEv">FD EV / $10</th>
+          <th scope="col" class="wr" data-k="kaPrice">Kalshi (after fee)</th><th class="wr" scope="col" data-k="kaEdge">Kalshi edge</th><th class="wr" scope="col" data-k="kaEv">Kalshi EV / $10</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="legend">
+    <span><span class="sw" style="background:#DBEAFE;border:1px solid #1D4ED8"></span>+EV at that book</span>
+    <span><span class="sw" style="background:#FFEDD5;border:1px solid #C2410C"></span>Edge worse than −3%</span>
+    <span>Edge = true prob − book implied (after the boost). Shaded row = anchor line. — = not offered.</span>
+    <span>Kalshi (NFL and NBA only): price = the ask plus Kalshi's taker fee. If the player doesn't play, Kalshi settles No: Overs lose, Unders win. Profit boosts don't apply to Kalshi.</span>
+    <span>Books = how many books' prices (vig removed) make that rung's true probability. Grey = one book only.</span>
+  </footer>
+</div>
+<script src="../common.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  let data;
+  try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
+  $('stamp').textContent = PL.stamp(data.pulledAt) + ({ wide: ' · wide (sharp first)', pinnacle: ' · Pinnacle' }[data.source] || ' · consensus');
+  const props = data.props;
+  const h = new URLSearchParams(location.hash.slice(1));
+  const S = { sport: h.get('sport'), team: h.get('team'), pid: h.get('pid'), stat: h.get('stat'), side: h.get('side') || 'o', boost: +(h.get('boost') || 0), sort: { key: 'rung', dir: 'asc' } };
+
+  const uniq = (xs) => [...new Set(xs)];
+  function pills(el, items, cur, onPick) {
+    el.innerHTML = '';
+    for (const it of items) {
+      const b = document.createElement('button');
+      b.className = 'pill'; b.type = 'button'; b.textContent = it.label;
+      b.setAttribute('aria-pressed', String(it.value === cur)); b.disabled = !!it.disabled;
+      b.onclick = () => onPick(it.value);
+      el.appendChild(b);
+    }
+  }
+  function fill(sel, opts, cur) {
+    sel.innerHTML = opts.map((o) => `<option value="${PL.esc(o.value)}"${o.value === cur ? ' selected' : ''}>${PL.esc(o.label)}</option>`).join('');
+  }
+
+  function render() {
+    const sportsHave = uniq(props.map((p) => p.sport));
+    if (!sportsHave.includes(S.sport)) S.sport = PL.SPORTS.find((s) => sportsHave.includes(s));
+    pills($('sports'), PL.SPORTS.map((s) => ({ label: s, value: s, disabled: !sportsHave.includes(s) })), S.sport, (v) => { S.sport = v; S.team = S.pid = S.stat = null; render(); });
+
+    const inSport = props.filter((p) => p.sport === S.sport);
+    const teams = uniq(inSport.map((p) => p.teamName)).filter(Boolean).sort();
+    if (!teams.includes(S.team)) S.team = teams[0];
+    fill($('team'), teams.map((t) => ({ value: t, label: t })), S.team);
+
+    const inTeam = inSport.filter((p) => p.teamName === S.team);
+    const players = [...new Map(inTeam.map((p) => [p.pid, p.player])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    if (!players.some(([id]) => id === S.pid)) S.pid = players[0] && players[0][0];
+    fill($('player'), players.map(([id, n]) => ({ value: id, label: n })), S.pid);
+
+    const forPlayer = inTeam.filter((p) => p.pid === S.pid);
+    if (!forPlayer.some((p) => p.stat === S.stat)) S.stat = forPlayer[0] && forPlayer[0].stat;
+    fill($('stat'), forPlayer.map((p) => ({ value: p.stat, label: p.statLabel })), S.stat);
+
+    pills($('sides'), [{ label: 'Over', value: 'o' }, { label: 'Under', value: 'u' }], S.side, (v) => { S.side = v; render(); });
+    pills($('boosts'), PL.BOOSTS.map((b) => ({ label: b ? b + '%' : 'None', value: b })), S.boost, (v) => { S.boost = v; render(); });
+
+    const prop = forPlayer.find((p) => p.stat === S.stat);
+    history.replaceState(null, '', '#' + new URLSearchParams({ sport: S.sport || '', team: S.team || '', pid: S.pid || '', stat: S.stat || '', side: S.side, boost: S.boost }).toString());
+    if (!prop) { $('facts').innerHTML = ''; $('rows').innerHTML = '<tr><td class="l" colspan="15">No props for this pick.</td></tr>'; return; }
+    table(prop);
+  }
+
+  function table(prop) {
+    const B = S.boost / 100, side = S.side, a = prop.anchor;
+    let best = null;
+    const rows = prop.rungs.filter((r) => r['dk' + side] != null || r['fd' + side] != null || r['ka' + side] != null).map((r) => {
+      const { pW, pL } = PL.sideProbs(r, side);
+      const pTrue = pW / Math.max(pW + pL, 1e-9);
+      const k = { rung: side === 'o' ? r.l : -r.l, p: pTrue, fair: pTrue, n: r.n };
+      const cells = ['dk', 'fd'].map((bk) => {
+        const odds = r[bk + side];
+        const sep = ' sep';
+        if (odds == null) return `<td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na${sep}">—</td>`;
+        const x = PL.price(odds, pW, pL, B);
+        Object.assign(k, { [bk + 'Price']: PL.payout(odds), [bk + 'Be']: x.be, [bk + 'Edge']: x.edge, [bk + 'Ev']: x.ev });
+        if (x.ev > 0 && (!best || x.ev > best.ev)) best = { ...x, odds, bk, label: PL.rungLabel(r.l, side) };
+        const cls = x.edge > 0 ? 'plus' : x.edge < -0.03 ? 'minus' : '';
+        return `<td class="b">${PL.fmtOdds(odds)}</td><td class="m">${PL.pct(x.be)}</td><td class="${cls}">${PL.signedPct(x.edge)}</td><td class="${cls}${sep}">${PL.money(x.ev)}</td>`;
+      });
+      // Kalshi: price already includes its taker fee; profit boosts don't apply
+      const ko = r['ka' + side], kc = r['kp' + side];
+      let kcells = '<td class="na">—</td><td class="na">—</td><td class="na">—</td>';
+      if (ko != null) {
+        const x = PL.price(ko, pW, pL, 0);
+        Object.assign(k, { kaPrice: PL.payout(ko), kaEdge: x.edge, kaEv: x.ev });
+        if (x.ev > 0 && (!best || x.ev > best.ev)) best = { ...x, odds: ko, bk: 'ka', label: PL.rungLabel(r.l, side) };
+        const cls = x.edge > 0 ? 'plus' : x.edge < -0.03 ? 'minus' : '';
+        kcells = `<td class="b">${PL.fmtOdds(ko)}<span class="sub2">${side === 'o' ? 'Yes' : 'No'} ${kc}¢</span></td><td class="${cls}">${PL.signedPct(x.edge)}</td><td class="${cls}">${PL.money(x.ev)}</td>`;
+      }
+      cells.push(kcells);
+      return { k, html: `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m">${PL.fair(pTrue)}</td><td class="m sep${r.n < 2 ? ' na' : ''}">${r.n}${r.sf ? ' · ' + r.ns + ' sharp' : ''}</td>${cells[0]}${cells[1]}${cells[2]}</tr>` };
+    });
+    PL.sortHeaders($('head'), S, () => table(prop));
+    const isPin = data.source === 'pinnacle';
+    $('msg').innerHTML = isPin && !prop.pin ? `<p class="warn"><b>No Pinnacle line</b> for this prop, so these are the 9-book numbers. Pinnacle-based props are the ones with a Pinnacle anchor.</p>`
+      : (a.n < 2 && !prop.pin) ? `<p class="warn"><b>1 source:</b> only one book quotes both sides of this prop, so its vig-free number rests on that single book${data.source === 'wide' ? ' (often an exchange)' : ''}. DraftKings, FanDuel and Kalshi prices below are real, but treat the true probabilities and edges as rough.</p>` : '';
+    $('rows').innerHTML = PL.sortRows(rows, S.sort).map((x) => x.html).join('') || '<tr><td class="l" colspan="15">Neither book offers this side.</td></tr>';
+    const curveTxt = isPin && prop.pin
+      ? `Pinnacle sets the anchor; every rung is the 9-book market ladder shifted to match Pinnacle at its line`
+      : data.source === 'wide'
+      ? `Each book's vig removed; rungs 2+ sharp books price use the sharp books' median, the rest the median of all ${prop.books} books`
+      : `Every rung: each of ${prop.books} books' vig removed, median of the books posting it`;
+    const game = data.games.find((g) => g.id === prop.game);
+    const vs = game ? (game.away.name + ' at ' + game.home.name) : '';
+    $('facts').innerHTML = `
+      <div class="card fact"><span class="lbl">${prop.pin ? 'Pinnacle anchor' : 'Anchor'}</span><span class="big">Over ${a.l} · ${PL.pct(a.p)}</span>
+        <span class="small">Fair ${PL.fmtOdds(a.fair)} · ${prop.pin ? "Pinnacle's line, vig removed" + (prop.pin.risk ? ' · Pinnacle limit $' + Number(prop.pin.risk).toLocaleString() : '') : a.n >= 2 ? 'median of ' + a.n + ' books quoting both sides, vig removed' : 'only 1 book quotes both sides: weak anchor'}</span></div>
+      <div class="card fact"><span class="lbl">Source</span><span><span class="tag dark">${isPin ? (prop.pin ? 'Pinnacle' : 'No Pinnacle line · 9-book') : data.source === 'wide' ? 'Wide · sharp first' : 'Consensus'}</span> <span class="tag">${PL.esc(vs)}</span></span>
+        <span class="small">${PL.esc(curveTxt)} · ${PL.when(prop.start)} ET</span></div>
+      <div class="card fact"><span class="lbl">Best bet on this ladder</span>
+        <span class="big ${best ? 'good' : ''}">${best ? best.label + ' at ' + ({ dk: 'DraftKings', fd: 'FanDuel', ka: 'Kalshi' })[best.bk] + ' ' + PL.fmtOdds(best.odds) : 'No +EV rung'}</span>
+        <span class="small">${best ? 'Edge ' + PL.signedPct(best.edge) + ', EV ' + PL.money(best.ev) + ' per $10' + (S.boost ? ' with the boost' : '') : 'Try the other side or a profit boost'}</span></div>`;
+  }
+
+  $('team').onchange = (e) => { S.team = e.target.value; S.pid = S.stat = null; render(); };
+  $('player').onchange = (e) => { S.pid = e.target.value; S.stat = null; render(); };
+  $('stat').onchange = (e) => { S.stat = e.target.value; render(); };
+  render();
+})();
+</script>
+</body>
+</html>
