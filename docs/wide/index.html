@@ -140,6 +140,7 @@
       return { k, html: `<tr class="${r.a ? 'anchor' : ''}"><th scope="row" class="l b">${PL.rungLabel(r.l, side)}</th><td class="b">${PL.pct(pTrue)}</td><td class="m">${PL.fair(pTrue)}</td><td class="m sep${r.n < 2 ? ' na' : ''}">${r.n}${r.sf ? ' · ' + r.ns + ' sharp' : ''}</td>${cells[0]}${cells[1]}${cells[2]}</tr>` };
     });
     PL.sortHeaders($('head'), S, () => table(prop));
+    $('msg').innerHTML = a.n < 2 ? `<p class="warn"><b>1 source:</b> only one book quotes both sides of this prop, so its vig-free number rests on that single book${data.source === 'wide' ? ' (often an exchange)' : ''}. DraftKings, FanDuel and Kalshi prices below are real, but treat the true probabilities and edges as rough.</p>` : '';
     $('rows').innerHTML = PL.sortRows(rows, S.sort).map((x) => x.html).join('') || '<tr><td class="l" colspan="15">Neither book offers this side.</td></tr>';
     const curveTxt = data.source === 'wide'
       ? `Each book's vig removed; rungs 2+ sharp books price use the sharp books' median, the rest the median of all ${prop.books} books`
