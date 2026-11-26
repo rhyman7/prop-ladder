@@ -131,3 +131,12 @@ logged history to test on (nothing logged yet).
 - Coverage and fairOdds checks: `scripts/coverage_test.py`,
   `scripts/fairodds_check.py` (manual Actions, reports in `coverage/`).
 - Mockup: Prop Ladder design canvas on claude.ai (Nov 24, 2026).
+
+## Site bar (Nov 26, 2026)
+
+Every page (`index.html`, `plays.html`, `results.html`, and the generated wide and Pinnacle pages)
+loads the Weekly Gridiron Board's site bar as the first thing in `<body>`:
+`<script src="/site-bar.js" data-shell="2"></script>`. The script lives in rhyman7/rhyman7.github.io;
+change the bar there. It gives the pages the Back arrow inside the home-screen app. The bar lists
+Prop Ladder under Tools and has no link to Results. The page tabs are styled as
+`nav[aria-label=Pages]` in `style.css`, not bare `nav`, so those styles don't reach the bar.
