@@ -1,0 +1,21 @@
+name: PinnOdds probe
+# By hand only. Checks PinnOdds' Pinnacle player props (~2-12 of the trial's 100 requests/day).
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - env:
+          PINNODDS_API_KEY: ${{ secrets.PINNODDS_API_KEY }}
+        run: python scripts/pinnodds_probe.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add coverage/pinnodds_probe.json && git commit -m "PinnOdds probe" || true
+          git pull --rebase -q && git push
