@@ -44,7 +44,10 @@ STAT = {  # Pinnacle "Total ..." -> SGO statID
     "Assists": "assists", "Pts & Rebs & Asts": "points+rebounds+assists",
     "Pts & Rebs": "points+rebounds", "Pts & Asts": "points+assists", "Rebs & Asts": "rebounds+assists",
 }
-SPORT = {"NFL": "NFL", "NBA": "NBA"}   # NCAA football/basketball: too few Pinnacle props (Nov 2026)
+# Pinnacle files both college sports under league "NCAA"; the sport id tells them
+# apart. College props are few (13 football, 0 basketball on Nov 25, 2026) but
+# are used wherever Pinnacle posts them.
+SPORT = {(5, "NFL"): "NFL", (3, "NBA"): "NBA", (5, "NCAA"): "CFB", (3, "NCAA"): "NCAAB"}
 
 
 def get(path, params):
@@ -97,7 +100,7 @@ def fetch():
             continue
         n = 0
         for e in r.get("events") or []:
-            sport = SPORT.get(e.get("league_name"))
+            sport = SPORT.get((sid, e.get("league_name")))
             if not sport:
                 continue
             for sp in e.get("specials") or []:
@@ -153,7 +156,7 @@ def main():
     hits = 0
     for p in out["props"]:
         p["pin"] = None
-        if p["sport"] not in ("NFL", "NBA") or not p.get("start"):
+        if not p.get("start"):
             continue
         day = datetime.fromisoformat(p["start"].replace("Z", "+00:00")).astimezone(ET).date().isoformat()
         q = quotes.get((p["sport"], p["stat"], norm(p["player"]), day))

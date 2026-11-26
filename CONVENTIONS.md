@@ -89,8 +89,8 @@ logged history to test on (nothing logged yet).
   Basketball fixtures with `include_specials=nested`; prices come inline).
 - Pinnacle posts ONE line per prop (both sides). Its vig is removed (power
   method) and the 9-book market ladder is shifted in log-odds so it matches
-  Pinnacle exactly at Pinnacle's line (`pin.shift`). NFL and NBA only (13 NCAA
-  football props and no college basketball on Nov 25). Props Pinnacle doesn't
+  Pinnacle exactly at Pinnacle's line (`pin.shift`). All four sports, but
+  Pinnacle posts few college props (13 NCAA football, 0 basketball on Nov 25). Props Pinnacle doesn't
   price keep the 9-book numbers with `pin: null` and are flagged.
 - Own play log `data/pin_plays_log.json` (Pinnacle-priced props only) ->
   `docs/pinnacle/results.json`; head-to-head vs 9-book `data/compare_pin_log.json`
