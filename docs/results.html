@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Results</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:12px}
 .cardhead{padding:14px 16px 0;margin:0;font-size:15px;font-weight:700}
-.pos{color:#1E3A8A;font-weight:600}.neg{color:#9A3412;font-weight:600}
+.pos{color:var(--plus);font-weight:600}.neg{color:var(--minus);font-weight:600}
 .res{display:inline-block;min-width:44px;padding:3px 8px;border-radius:6px;font-weight:700;font-size:13px;text-align:center}
-.res.win{background:#DBEAFE;color:#1E3A8A}.res.loss{background:#FFEDD5;color:#9A3412}.res.push,.res.void{background:#F3F4F6;color:#4B5563}
+.res.win{background:var(--plus-bg);color:var(--plus)}.res.loss{background:var(--minus-bg);color:var(--minus)}.res.push,.res.void{background:var(--soft);color:var(--muted)}
 .chart{padding:12px 16px 16px}
 .compact th,.compact td{padding:9px 6px;font-size:13px}
 .compact th:first-child,.compact td:first-child{padding-left:16px}
@@ -127,12 +127,12 @@
     const x = (i) => P + i * (W - 2 * P) / (C.length - 1), y = (v) => H - P - (v - lo) * (H - 2 * P) / span;
     const pts = C.map((c, i) => `${x(i).toFixed(1)},${y(c.profit).toFixed(1)}`).join(' ');
     $('chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cumulative profit by game day, ending at ${money(ys[ys.length - 1])}">
-      <line x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}" stroke="#D1D5DB" stroke-dasharray="4 4"/>
-      <polyline points="${pts}" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linejoin="round"/>
-      <text x="${P}" y="${H - 10}" font-size="12" fill="#4B5563">${C[0].date}</text>
-      <text x="${W - P}" y="${H - 10}" font-size="12" fill="#4B5563" text-anchor="end">${C[C.length - 1].date}</text>
-      <text x="${W - P}" y="${y(ys[ys.length - 1]) - 8}" font-size="13" font-weight="700" fill="#1E3A8A" text-anchor="end">${money(ys[ys.length - 1])}</text>
-      <text x="${P - 6}" y="${y(0) + 4}" font-size="12" fill="#4B5563" text-anchor="end">$0</text></svg>`;
+      <line x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}" stroke="var(--edge)" stroke-dasharray="4 4"/>
+      <polyline points="${pts}" fill="none" stroke="var(--chart)" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="${P}" y="${H - 10}" font-size="12" fill="var(--muted)">${C[0].date}</text>
+      <text x="${W - P}" y="${H - 10}" font-size="12" fill="var(--muted)" text-anchor="end">${C[C.length - 1].date}</text>
+      <text x="${W - P}" y="${y(ys[ys.length - 1]) - 8}" font-size="13" font-weight="700" fill="var(--ink)" text-anchor="end">${money(ys[ys.length - 1])}</text>
+      <text x="${P - 6}" y="${y(0) + 4}" font-size="12" fill="var(--muted)" text-anchor="end">$0</text></svg>`;
   } else {
     $('chart').innerHTML = '<p class="small" style="margin:0">The chart appears after two game days are graded.</p>';
   }

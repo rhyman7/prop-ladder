@@ -152,3 +152,17 @@ that doesn't offer a rung is left off that rung's card. All +EV plays shows the 
 a "Show all plays" button. Column sorting is desktop-only; a phone keeps the default order.
 Results' list of graded plays stays a table that scrolls sideways. Wider screens and print
 must stay pixel-identical.
+
+## Dark look (Nov 26, 2026)
+
+The pages wear the Weekly Gridiron Board's dark look (the matchup dashboards' graphite and Archivo):
+page `#131416`, cards `#1b1d21`, raised `#24272c`, rules `#353a42`, text `#f2f1ee`, secondary
+`#9da2ab`. **+EV is green (`--plus`), an edge worse than −3% is red (`--minus`)**; it was blue and
+orange. Every colour is a token on the first line of `docs/style.css`; pages and scripts use
+`var(--…)`, never a hex colour. The second line puts the old light colours back for print.
+The page tabs (Prop Ladder / All +EV plays, and the three Results versions) stay: they are views
+inside the tool, and the shared bar does not list them.
+
+The same change repaired the phone rules for All +EV plays and the Results summaries: doubled
+selectors (`.m-plays tbody tbody`, `td::before td::before`) had left those tables as plain tables
+on a phone.
