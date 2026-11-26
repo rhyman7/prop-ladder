@@ -140,3 +140,15 @@ loads the Weekly Gridiron Board's site bar as the first thing in `<body>`:
 change the bar there. It gives the pages the Back arrow inside the home-screen app. The bar lists
 Prop Ladder under Tools and has no link to Results. The page tabs are styled as
 `nav[aria-label=Pages]` in `style.css`, not bare `nav`, so those styles don't reach the bar.
+
+## Phones (Nov 26, 2026; 760px and under)
+
+The ladder table, the All +EV plays table and Results' summary tables show one card per row.
+The rules are the last block of `docs/style.css`; the tables carry `m-ladder` and `m-plays`
+(set in `docs/index.html` and `docs/plays.html`, so the generated wide and Pinnacle pages get
+them too). Each number's label is written in that block by column position, so **a column
+added, removed or reordered in one of those tables means updating its labels there**. A book
+that doesn't offer a rung is left off that rung's card. All +EV plays shows the first 25 with
+a "Show all plays" button. Column sorting is desktop-only; a phone keeps the default order.
+Results' list of graded plays stays a table that scrolls sideways. Wider screens and print
+must stay pixel-identical.
