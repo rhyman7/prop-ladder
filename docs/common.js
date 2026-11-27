@@ -57,8 +57,48 @@ const PL = (() => {
       };
     });
   }
+  // Results page: the same summary track.py's summarize() makes, from results_plays.json rows
+  // ([6 breakdown indexes, first price, true x1e4, last true x1e6, result 0/1/2, day, prop]).
+  const r4 = (x) => Math.round(x * 1e4) / 1e4;
+  function cents(a) {            // profit on $10 in cents, rounded like Python (halves to even)
+    if (a > 0) return Math.round(a * 10);
+    const c = 100000 / -a, f = Math.floor(c), d = c - f;
+    return d > 0.5 ? f + 1 : d < 0.5 ? f : f + (f % 2);
+  }
+  function sumPlays(rows, days) {
+    const n = rows.length;
+    if (!n) return null;
+    let w = 0, l = 0, p = 0, pc = 0, expW = 0, expP = 0, clv = 0, beat = 0;
+    const by = new Map(), daily = days ? days.map(() => 0) : null;
+    for (const r of rows) {
+      const a = r[6], t = r[7] / 1e4, win = a > 0 ? a / 10 : 1000 / -a;
+      const c = r[8] / 1e6 - (a > 0 ? 100 / (a + 100) : -a / (-a + 100));
+      clv += c; if (c > 0) beat++;
+      if (r[9] === 2) { p++; continue; }
+      const pf = r[9] === 1 ? cents(a) : -1000;
+      if (r[9] === 1) w++; else l++;
+      pc += pf; expW += t; expP += t * win - (1 - t) * 10;
+      const k = by.get(r[11]) || [0, 0]; k[0] += pf / 100; k[1] += 10; by.set(r[11], k);
+      if (daily) daily[r[10]] += pf;
+    }
+    const staked = 10 * (w + l), profit = pc / 100;
+    let se = null;
+    if (by.size > 1 && staked) {
+      const roi = profit / staked; let ss = 0;
+      for (const [pf, stk] of by.values()) ss += (pf - roi * stk) ** 2;
+      se = r4(Math.sqrt(by.size / (by.size - 1) * ss) / staked);
+    }
+    const out = { n, w, l, p, profit, roi: staked ? r4(profit / staked) : null, roiSE: se,
+      winRate: w + l ? r4(w / (w + l)) : null, expWinRate: w + l ? r4(expW / (w + l)) : null,
+      expProfit: Math.round(expP * 100) / 100, clv: r4(clv / n), beatClose: r4(beat / n) };
+    if (daily) {
+      const seen = new Set(rows.map((r) => r[10])); let run = 0; out.curve = [];
+      days.forEach((d, i) => { if (seen.has(i)) { run += daily[i]; out.curve.push({ date: d, profit: run / 100 }); } });
+    }
+    return out;
+  }
   const payout = (a) => a > 0 ? 1 + a / 100 : 1 + 100 / -a;   // decimal odds, for sorting prices
   const SPORTS = ['NFL', 'CFB', 'NBA', 'NCAAB'];
   const BOOSTS = [0, 25, 30, 50, 100];
-  return { sortRows, sortHeaders, payout, fmtOdds, pct, signedPct, money, fair, price, rungLabel, sideProbs, when, stamp, load, esc, SPORTS, BOOSTS };
+  return { sumPlays, sortRows, sortHeaders, payout, fmtOdds, pct, signedPct, money, fair, price, rungLabel, sideProbs, when, stamp, load, esc, SPORTS, BOOSTS };
 })();

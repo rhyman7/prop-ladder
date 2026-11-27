@@ -123,6 +123,19 @@ logged history to test on (nothing logged yet).
   for `results.html`: record, profit, ROI ± 1 SE, actual vs expected win rate,
   CLV (last true prob − first price's implied), by edge, books, sport, book,
   side and price.
+- **Filter buttons (Nov 27, 2026):** Results has one group of buttons per
+  breakdown table (several can be on in a group; All clears it). With any on,
+  the summary cards, profit chart, breakdown tables and the graded-plays list
+  are redone in the browser for the plays that match; with none on the page
+  shows `results.json` exactly as written. The head-to-head table is not
+  filtered. The selection sits in the address (`#//0/0.1`) and carries across
+  the three versions. Data: `results_plays.json` beside each `results.json`
+  (`build_plays()`), one short row per graded play; the page ignores it unless
+  its `updatedAt` equals `results.json`'s, so the two must be written in the
+  same run. The breakdowns and the buttons both come from `DIMS` in
+  `track.py`: add or change a breakdown there only. The browser's maths is
+  `PL.sumPlays` in `common.js` and must match `summarize()` in `track.py`
+  (checked Nov 27 against all 68 table rows of the three versions).
 
 ## Other
 

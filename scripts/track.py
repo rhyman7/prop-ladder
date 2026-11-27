@@ -9,7 +9,8 @@ Run after build.py (same workflow). Uses docs/data.json as the current market.
 - Graded: when the game is final, from SGO's `score` on the prop's odd
   (null score = player did not play = void). $10 flat at the first price,
   no boost. Costs about 1 SGO object per finished game (MAX_GRADE per run).
-Log: data/plays_log.json (not served). Summary: docs/results.json.
+Log: data/plays_log.json (not served). Summary: docs/results.json, plus
+docs/results_plays.json (one short row per graded play, for the page's filters).
 """
 import json
 import math
@@ -297,29 +298,38 @@ def summarize(rows):
             "beatClose": round(sum(c > 0 for c in clv) / n, 4)}
 
 
+BOOK_NAMES = {"dk": "DraftKings", "fd": "FanDuel", "ka": "Kalshi"}
+# The Results breakdowns, in page order: (name, play -> label, every label in order).
+# The same list drives the filter buttons on the Results page (results_plays.json).
+DIMS = [
+    ("Edge when first flagged", lambda r: bucket_edge(r["first_edge"]), ["0–1%", "1–2%", "2–3%", "3–5%", "5%+"]),
+    ("Books behind true prob", lambda r: str(r["first_books"]) if r["first_books"] < 4 else "4+", ["2", "3", "4+"]),
+    ("Sport", lambda r: r["sport"], ["NFL", "CFB", "NBA", "NCAAB"]),
+    ("Book", lambda r: BOOK_NAMES[r["book"]], ["DraftKings", "FanDuel", "Kalshi"]),
+    ("Side", lambda r: "Over" if r["side"] == "o" else "Under", ["Over", "Under"]),
+    ("Price", lambda r: bucket_price(r["first_odds"]), ["−300 or less", "−299 to −151", "−150 to −101", "+100 to +199", "+200 or more"]),
+]
+
+
+def game_day(r):
+    return parse(r["start"]).astimezone(timezone(timedelta(hours=-5))).date().isoformat()
+
+
+def dim_idx(r):
+    return [labels.index(fn(r)) for _, fn, labels in DIMS]
+
+
 def build_results(log, now):
     rows = [r for r in log.values() if r["status"] == "graded"]
-    groups = {
-        "Edge when first flagged": lambda r: bucket_edge(r["first_edge"]),
-        "Books behind true prob": lambda r: str(r["first_books"]) if r["first_books"] < 4 else "4+",
-        "Sport": lambda r: r["sport"],
-        "Book": lambda r: {"dk": "DraftKings", "fd": "FanDuel", "ka": "Kalshi"}[r["book"]],
-        "Side": lambda r: "Over" if r["side"] == "o" else "Under",
-        "Price": lambda r: bucket_price(r["first_odds"]),
-    }
-    order = {"Edge when first flagged": ["0–1%", "1–2%", "2–3%", "3–5%", "5%+"],
-             "Books behind true prob": ["2", "3", "4+"], "Sport": ["NFL", "CFB", "NBA", "NCAAB"],
-             "Price": ["−300 or less", "−299 to −151", "−150 to −101", "+100 to +199", "+200 or more"]}
     out_groups = []
-    for name, fn in groups.items():
+    for name, fn, labels in DIMS:
         by = {}
         for r in rows:
             by.setdefault(fn(r), []).append(r)
-        keys = [k for k in order.get(name, sorted(by)) if k in by]
-        out_groups.append({"name": name, "rows": [{"label": k, **summarize(by[k])} for k in keys]})
+        out_groups.append({"name": name, "rows": [{"label": k, **summarize(by[k])} for k in labels if k in by]})
     daily = {}
     for r in sorted(rows, key=lambda r: r["start"]):
-        d = parse(r["start"]).astimezone(timezone(timedelta(hours=-5))).date().isoformat()
+        d = game_day(r)
         daily[d] = daily.get(d, 0) + r["profit"]
     run, curve = 0.0, []
     for d, pf in daily.items():
@@ -333,7 +343,25 @@ def build_results(log, now):
             "pending": sum(r["status"] == "pending" for r in log.values()),
             "voids": sum(r["status"] == "void" for r in log.values()),
             "overall": summarize(rows), "groups": out_groups, "curve": curve,
-            "recent": [{k: r.get(k) for k in keep} for r in recent]}
+            "recent": [{**{k: r.get(k) for k in keep}, "b": dim_idx(r)} for r in recent]}
+
+
+def build_plays(log, now):
+    """Every graded play, one short row each, so the Results page can redo its
+    numbers for any combination of the filter buttons. Row: the six DIMS label
+    indexes, first price, first true prob x 1e4, last true prob x 1e6, result
+    (0 loss, 1 win, 2 push), game-day index, prop index (game|player|stat, for
+    the clustered standard error). `updatedAt` must equal results.json's: the
+    page ignores this file when they differ."""
+    rows = sorted((r for r in log.values() if r["status"] == "graded"), key=lambda r: r["start"])
+    days, props, out = {}, {}, []
+    for r in rows:
+        d = days.setdefault(game_day(r), len(days))
+        c = props.setdefault((r["game"], r["pid"], r["stat"]), len(props))
+        out.append(dim_idx(r) + [r["first_odds"], round(r["first_true"] * 1e4), round(r["last_true"] * 1e6),
+                                 {"loss": 0, "win": 1, "push": 2}[r["result"]], d, c])
+    return {"updatedAt": now.isoformat(timespec="seconds"), "dims": [{"name": n, "labels": l} for n, _, l in DIMS],
+            "days": list(days), "rows": out}
 
 
 VERSIONS = [
@@ -391,6 +419,7 @@ def main():
     for name, data, log, log_p, out_p in vers:
         save(log_p, log)
         save(out_p, build_results(log, now))
+        save(out_p.replace("results.json", "results_plays.json"), build_plays(log, now))
     for other, comp, log_p, out_p in comps:
         save(log_p, comp)
         save(out_p, compare_summary(comp, now))
