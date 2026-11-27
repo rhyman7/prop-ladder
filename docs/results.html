@@ -69,7 +69,7 @@
     <span>± = one standard error, counting all rungs of one player's stat in one game as a single bet (they win or lose together). Under a few hundred props per row, results are mostly noise.</span>
   </footer>
 </div>
-<script src="common.js"></script>
+<script src="common.js?v=20261127"></script>
 <script>
 (async () => {
   const $ = (id) => document.getElementById(id);
@@ -114,7 +114,7 @@
   let P = null;
   try {
     const r = await fetch(({ wide: 'wide/results_plays.json', pin: 'pinnacle/results_plays.json' })[V] || 'results_plays.json', { cache: 'no-store' });
-    if (r.ok) { const j = await r.json(); if (j.updatedAt === R.updatedAt && j.rows.length) P = j; }
+    if (r.ok) { const j = await r.json(); if (j.updatedAt === R.updatedAt && j.rows.length && PL.sumPlays && PL.cents) P = j;   // an old cached common.js: no filters, page still works }
   } catch (e) {}
   const DIMS = P ? P.dims : [];
   const F = DIMS.map(() => new Set());            // chosen label indexes per breakdown; empty = all
