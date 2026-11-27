@@ -58,7 +58,8 @@ const PL = (() => {
     });
   }
   // Results page: the same summary track.py's summarize() makes, from results_plays.json rows
-  // ([6 breakdown indexes, first price, true x1e4, last true x1e6, result 0/1/2, day, prop]).
+  // ([6 breakdown indexes, first price, true x1e4, last true x1e6, result 0/1/2/3, day, prop, …]).
+  // Void plays (result 3) are left out, as they are there.
   const r4 = (x) => Math.round(x * 1e4) / 1e4;
   function cents(a) {            // profit on $10 in cents, rounded like Python (halves to even)
     if (a > 0) return Math.round(a * 10);
@@ -66,6 +67,7 @@ const PL = (() => {
     return d > 0.5 ? f + 1 : d < 0.5 ? f : f + (f % 2);
   }
   function sumPlays(rows, days) {
+    rows = rows.filter((r) => r[9] !== 3);
     const n = rows.length;
     if (!n) return null;
     let w = 0, l = 0, p = 0, pc = 0, expW = 0, expP = 0, clv = 0, beat = 0;

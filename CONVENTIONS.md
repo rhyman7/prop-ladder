@@ -130,7 +130,10 @@ logged history to test on (nothing logged yet).
   shows `results.json` exactly as written. The head-to-head table is not
   filtered. The selection sits in the address (`#//0/0.1`) and carries across
   the three versions. Data: `results_plays.json` beside each `results.json`
-  (`build_plays()`), one short row per graded play; the page ignores it unless
+  (`build_plays()`), one short row per graded or void play (about 70 bytes
+  each; ~380 KB at 5,400 plays), which also feeds the graded-plays list, so the
+  list holds every play, not the latest 400 (`recent` in `results.json` is only
+  the fallback); the page ignores it unless
   its `updatedAt` equals `results.json`'s, so the two must be written in the
   same run. The breakdowns and the buttons both come from `DIMS` in
   `track.py`: add or change a breakdown there only. The browser's maths is

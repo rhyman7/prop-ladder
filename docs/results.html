@@ -123,7 +123,7 @@
   });
   const active = () => F.some((f) => f.size);
   const match = (b) => F.every((f, i) => !f.size || f.has(b[i]));
-  const has = DIMS.map((d, i) => { const s = new Set(); for (const r of P.rows) s.add(r[i]); return s; });
+  const has = DIMS.map((d, i) => { const s = new Set(); for (const r of P.rows) if (r[9] !== 3) s.add(r[i]); return s; });
 
   function drawFilters() {
     const box = $('filters'); box.hidden = !P; box.innerHTML = '';
@@ -151,7 +151,12 @@
   const GS = {};                                   // each breakdown table keeps its own sort
   let shown = 50;
   const PS = { sort: { key: 'day', dir: 'desc' } };
-  const allPlays = (R.recent || []).map((r) => ({ r, k: { day: r.start, player: r.player, bet: r.statLabel + ' ' + r.side + String(r.line).padStart(6, '0'),
+  // The list: every graded or void play when the per-play file is there, else the latest 400.
+  const BOOKS = ['dk', 'fd', 'ka'], RES = ['loss', 'win', 'push', 'void'];
+  const recent = P ? P.rows.map((x) => ({ b: x, sport: P.dims[2].labels[x[2]], player: P.players[x[12]], team: P.teams[x[13]], statLabel: P.stats[x[14]], line: x[15],
+    side: x[4] === 0 ? 'o' : 'u', book: BOOKS[x[3]], first_odds: x[6], first_true: x[7] / 1e4, first_edge: x[16] / 1e4, first_books: x[17], last_odds: x[18],
+    result: RES[x[9]], actual: x[19], profit: x[9] === 1 ? (x[6] > 0 ? x[6] / 10 : Math.round(100000 / -x[6]) / 100) : x[9] === 0 ? -10 : 0, start: P.starts[x[20]] })) : (R.recent || []);
+  const allPlays = recent.map((r) => ({ r, k: { day: r.start, player: r.player, bet: r.statLabel + ' ' + r.side + String(r.line).padStart(6, '0'),
     book: r.book, price: PL.payout(r.first_odds), p: r.first_true, edge: r.first_edge, n: r.first_books,
     last: r.last_odds != null ? PL.payout(r.last_odds) : null, result: r.result, actual: r.actual, profit: r.result === 'void' ? null : r.profit } }));
 
@@ -159,9 +164,9 @@
     drawFilters();
     const on = active();
     // unfiltered: the summary exactly as track.py wrote it; filtered: redone here from the rows
-    let O = R.overall, C = R.curve || [], groups = (R.groups || []).filter((g) => g.rows.length);
+    let voids = R.voids, O = R.overall, C = R.curve || [], groups = (R.groups || []).filter((g) => g.rows.length);
     if (on) {
-      const rows = P.rows.filter(match);
+      const rows = P.rows.filter(match); voids = rows.filter((r) => r[9] === 3).length;
       O = PL.sumPlays(rows, P.days); C = O ? O.curve : [];
       groups = DIMS.map((d, i) => ({ name: d.name, rows: d.labels.map((label, j) => { const s = PL.sumPlays(rows.filter((r) => r[i] === j)); return s && { label, ...s }; }).filter(Boolean) })).filter((g) => g.rows.length);
     }
@@ -180,7 +185,7 @@
       $('msg').innerHTML = on && !O ? '<p class="warn">No graded plays match this selection yet.</p>' : '';
     }
     $('kpis').innerHTML = O ? [
-      kp('Record', `${O.w}-${O.l}${O.p ? '-' + O.p : ''}`, on ? `${O.n} graded, of ${R.overall.n} in all · since ${since}` : `${O.n} graded · ${R.voids} void · ${R.pending} pending · since ${since}`),
+      kp('Record', `${O.w}-${O.l}${O.p ? '-' + O.p : ''}`, on ? `${O.n} graded · ${voids} void · of ${R.overall.n} graded in all` : `${O.n} graded · ${R.voids} void · ${R.pending} pending · since ${since}`),
       kp('Profit', money(O.profit), `Expected ${money(O.expProfit)} from the edges`, O.profit > 0 ? 'good' : ''),
       kp('ROI', roi(O), 'Per $ staked, flat $10'),
       kp('Win rate', pctOr(O.winRate), `Expected ${pctOr(O.expWinRate)}`),
@@ -222,7 +227,8 @@
   function drawRows() {
     const on = active();
     const plays = on ? allPlays.filter(({ r }) => r.b && match(r.b)) : allPlays;
-    $('listhead').textContent = on ? `Graded plays (${plays.length} of the latest ${allPlays.length} match; click a header to sort)` : 'Graded plays (latest 400; click a header to sort)';
+    const nn = (x) => x.toLocaleString('en-US');
+    $('listhead').textContent = !P ? 'Graded plays (latest 400; click a header to sort)' : on ? `Graded plays (${nn(plays.length)} match, voids included; click a header to sort)` : `Graded plays (all ${nn(plays.length)}, voids included; click a header to sort)`;
     PL.sortHeaders($('phead'), PS, drawRows);
     $('more').hidden = plays.length <= shown;
     $('rows').innerHTML = PL.sortRows(plays, PS.sort).slice(0, shown).map(({ r }) => {
@@ -233,7 +239,7 @@
       <td>${PL.pct(r.first_true)}</td><td class="pos">${PL.signedPct(r.first_edge)}</td><td class="m">${r.first_books}</td>
       <td class="m">${r.last_odds != null ? PL.fmtOdds(r.last_odds) : '—'}</td><td><span class="res ${r.result}">${r.result}</span></td>
       <td class="m">${r.actual ?? '—'}</td><td class="${cls(r.profit)}">${r.result === 'void' ? '—' : money(r.profit)}</td></tr>`;
-    }).join('') || `<tr><td class="l" colspan="12">${on ? 'None of the latest ' + allPlays.length + ' graded plays match this selection.' : 'No graded plays yet.'}</td></tr>`;
+    }).join('') || `<tr><td class="l" colspan="12">${on ? 'No graded plays match this selection.' : 'No graded plays yet.'}</td></tr>`;
   }
   $('more').onclick = () => { shown += 100; drawRows(); };
   render();
