@@ -1,34 +1,20 @@
 {
  "teams": {
   "home": {
-   "teamID": "PITTSBURGH_STEELERS_NFL",
+   "teamID": "NEW_MEXICO_NCAAF",
    "names": {
-    "long": "Pittsburgh Steelers",
-    "medium": "Steelers",
-    "short": "PIT",
-    "location": "Pittsburgh"
-   },
-   "colors": {
-    "primary": "#FFD700",
-    "secondary": "#191310",
-    "primaryContrast": "#191310",
-    "secondaryContrast": "#FFD700"
+    "long": "New Mexico",
+    "medium": "New Mexico",
+    "short": "NM"
    },
    "statEntityID": "home"
   },
   "away": {
-   "teamID": "DENVER_BRONCOS_NFL",
+   "teamID": "AIR_FORCE_NCAAF",
    "names": {
-    "long": "Denver Broncos",
-    "medium": "Broncos",
-    "short": "DEN",
-    "location": "Denver"
-   },
-   "colors": {
-    "primary": "#002859",
-    "secondary": "#DB6127",
-    "primaryContrast": "#FFFFFF",
-    "secondaryContrast": "#000000"
+    "long": "Air Force",
+    "medium": "Air Force",
+    "short": "AF"
    },
    "statEntityID": "away"
   }
@@ -45,8 +31,12 @@
   "displayShort": "",
   "displayLong": "Upcoming",
   "inBreak": false,
-  "startsAt": "2026-11-27T20:00:00.000Z",
-  "previousStartsAt": [],
+  "startsAt": "2026-11-27T21:30:00.000Z",
+  "previousStartsAt": [
+   "2026-11-27T20:30:00.000Z",
+   "2026-11-28T20:30:00.000Z",
+   "2026-11-28T21:30:00.000Z"
+  ],
   "hardStart": true,
   "periods": {
    "started": [],
@@ -57,33 +47,26 @@
   "finalized": false
  },
  "players_first3": {
-  "BRANDON_JONES_1_NFL": {
-   "playerID": "BRANDON_JONES_1_NFL",
-   "name": "Brandon Jones",
-   "firstName": "Brandon",
-   "lastName": "Jones",
-   "nickname": "B.Jones",
-   "teamID": "DENVER_BRONCOS_NFL"
+  "ADAM_HRYNCIW_1_NCAAF": {
+   "playerID": "ADAM_HRYNCIW_1_NCAAF",
+   "name": "Adam Hrynciw",
+   "firstName": "Adam",
+   "lastName": "Hrynciw",
+   "teamID": "AIR_FORCE_NCAAF"
   },
-  "CALEB_LOHNER_1_NFL": {
-   "playerID": "CALEB_LOHNER_1_NFL",
-   "name": "Caleb Lohner",
-   "firstName": "Caleb",
-   "lastName": "Lohner",
-   "nickname": "C.Lohner",
-   "teamID": "DENVER_BRONCOS_NFL",
-   "status": "ir",
-   "statusDetails": "I.L. - Foot"
+  "BAILEN_GEORGE_1_NCAAF": {
+   "playerID": "BAILEN_GEORGE_1_NCAAF",
+   "name": "Bailen George",
+   "firstName": "Bailen",
+   "lastName": "George",
+   "teamID": "NEW_MEXICO_NCAAF"
   },
-  "COLE_BURGESS_1_NFL": {
-   "playerID": "COLE_BURGESS_1_NFL",
-   "name": "Cole Burgess",
-   "firstName": "Cole",
-   "lastName": "Burgess",
-   "nickname": "C.Burgess",
-   "teamID": "PITTSBURGH_STEELERS_NFL",
-   "status": "ir",
-   "statusDetails": "I.L. - Undisclosed"
+  "CADE_KEITH_1_NCAAF": {
+   "playerID": "CADE_KEITH_1_NCAAF",
+   "name": "Cade Keith",
+   "firstName": "Cade",
+   "lastName": "Keith",
+   "teamID": "NEW_MEXICO_NCAAF"
   }
  }
 }
