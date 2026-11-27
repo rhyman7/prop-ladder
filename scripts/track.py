@@ -311,6 +311,18 @@ DIMS = [
 ]
 
 
+# The Price filter buttons on Results use the All +EV plays page's ranges
+# (PRICES in docs/plays.html; keep the two the same). The Price table keeps
+# bucket_price's five rows.
+PRICE_FILTER = [("−700 or less", lambda a: a <= -700), ("−500 to −699", lambda a: -700 < a <= -500),
+                ("−300 to −499", lambda a: -500 < a <= -300), ("−100 to −299", lambda a: -300 < a <= -100),
+                ("+100", lambda a: a == 100), ("+101 to +299", lambda a: 100 < a < 300), ("+300 or more", lambda a: a >= 300)]
+
+
+def price_filter_idx(a):
+    return next(i for i, (_, f) in enumerate(PRICE_FILTER) if f(a))
+
+
 def game_day(r):
     return parse(r["start"]).astimezone(timezone(timedelta(hours=-5))).date().isoformat()
 
@@ -353,7 +365,9 @@ def build_plays(log, now):
     1e4, last true prob x 1e6, result (0 loss, 1 win, 2 push, 3 void), game-day
     index, prop index (game|player|stat, for the clustered standard error),
     then for the list: player, team and stat indexes, line, first edge x 1e4,
-    first books, last price, actual, kickoff index. `updatedAt` must equal
+    first books, last price, actual, kickoff index, Price-button index.
+    `filters` lists the button groups: name, labels and the row column each
+    reads (the tables' own columns, except Price). `updatedAt` must equal
     results.json's: the page ignores this file when they differ."""
     rows = sorted((r for r in log.values() if r["status"] in ("graded", "void")), key=lambda r: r["start"])
     days, props, players, teams, stats, starts, out = {}, {}, {}, {}, {}, {}, []
@@ -364,9 +378,12 @@ def build_plays(log, now):
             {"loss": 0, "win": 1, "push": 2, "void": 3}[r["result"]], ix(days, game_day(r)),
             ix(props, (r["game"], r["pid"], r["stat"])),
             ix(players, r["player"]), ix(teams, r.get("team") or ""), ix(stats, r["statLabel"]), r["line"],
-            round(r["first_edge"] * 1e4), r["first_books"], r.get("last_odds"), r.get("actual"), ix(starts, r["start"])])
+            round(r["first_edge"] * 1e4), r["first_books"], r.get("last_odds"), r.get("actual"), ix(starts, r["start"]),
+            price_filter_idx(r["first_odds"])])
+    filters = [{"name": n, "labels": l, "col": i} for i, (n, _, l) in enumerate(DIMS)]
+    filters[-1] = {"name": "Price", "labels": [l for l, _ in PRICE_FILTER], "col": 21}
     return {"updatedAt": now.isoformat(timespec="seconds"), "dims": [{"name": n, "labels": l} for n, _, l in DIMS],
-            "days": list(days), "players": list(players), "teams": list(teams), "stats": list(stats), "starts": list(starts),
+            "filters": filters, "days": list(days), "players": list(players), "teams": list(teams), "stats": list(stats), "starts": list(starts),
             "rows": out}
 
 

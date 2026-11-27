@@ -135,7 +135,10 @@ logged history to test on (nothing logged yet).
   list holds every play, not the latest 400 (`recent` in `results.json` is only
   the fallback); the page ignores it unless
   its `updatedAt` equals `results.json`'s, so the two must be written in the
-  same run. The breakdowns and the buttons both come from `DIMS` in
+  same run. The Price buttons are the exception: they use the All +EV plays
+  page's seven ranges (`PRICE_FILTER` in `track.py`; keep it the same as
+  `PRICES` in `docs/plays.html`), while the Price table keeps its five rows
+  (Ryan's choice, Nov 27). The other breakdowns and buttons both come from `DIMS` in
   `track.py`: add or change a breakdown there only. The browser's maths is
   `PL.sumPlays` in `common.js` and must match `summarize()` in `track.py`
   (checked Nov 27 against all 68 table rows of the three versions).

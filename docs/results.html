@@ -118,18 +118,20 @@
     if (r.ok) { const j = await r.json(); if (j.updatedAt === R.updatedAt && j.rows.length && PL.sumPlays && PL.cents) P = j; }
   } catch (e) {}
   const DIMS = P ? P.dims : [];
-  const F = DIMS.map(() => new Set());            // chosen label indexes per breakdown; empty = all
+  // Button groups: one per breakdown table, each reading one row column (Price has its own ranges, the All +EV plays page's)
+  const FD = P ? (P.filters || P.dims.map((d, i) => ({ ...d, col: i }))) : [];
+  const F = FD.map(() => new Set());              // chosen label indexes per group; empty = all
   location.hash.slice(1).split('/').forEach((part, i) => {
-    if (F[i]) part.split('.').forEach((x) => { if (/^\d+$/.test(x) && +x < DIMS[i].labels.length) F[i].add(+x); });
+    if (F[i]) part.split('.').forEach((x) => { if (/^\d+$/.test(x) && +x < FD[i].labels.length) F[i].add(+x); });
   });
   const active = () => F.some((f) => f.size);
-  const match = (b) => F.every((f, i) => !f.size || f.has(b[i]));
-  const has = DIMS.map((d, i) => { const s = new Set(); for (const r of P.rows) if (r[9] !== 3) s.add(r[i]); return s; });
+  const match = (b) => F.every((f, i) => !f.size || f.has(b[FD[i].col]));
+  const has = FD.map((d) => { const s = new Set(); for (const r of P.rows) if (r[9] !== 3) s.add(r[d.col]); return s; });
 
   function drawFilters() {
     const box = $('filters'); box.hidden = !P; box.innerHTML = '';
     if (!P) return;
-    DIMS.forEach((d, i) => {
+    FD.forEach((d, i) => {
       const field = document.createElement('div'); field.className = 'field';
       field.innerHTML = `<span class="lbl">${PL.esc(d.name)}</span>`;
       const pills = document.createElement('div'); pills.className = 'pills'; pills.setAttribute('role', 'group'); pills.setAttribute('aria-label', d.name);
@@ -176,7 +178,7 @@
     document.querySelectorAll('#vers a').forEach((a) => { a.href = a.href.split('#')[0] + hash; });   // keep the selection across versions
     $('count').hidden = !on;
     if (on) {
-      const picked = DIMS.map((d, i) => F[i].size ? [...F[i]].sort((a, b) => a - b).map((j) => d.labels[j]).join(' or ') : null).filter(Boolean).join(' · ');
+      const picked = FD.map((d, i) => F[i].size ? [...F[i]].sort((a, b) => a - b).map((j) => d.labels[j]).join(' or ') : null).filter(Boolean).join(' · ');
       $('count').innerHTML = `${(O ? O.n : 0).toLocaleString('en-US')} of ${R.overall.n.toLocaleString('en-US')} graded plays: ${PL.esc(picked)} <button class="pill" type="button" id="clear" style="margin-left:10px">Clear filters</button>`;
       $('clear').onclick = () => { F.forEach((f) => f.clear()); render(); };
     }
