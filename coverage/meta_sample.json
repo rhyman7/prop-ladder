@@ -1,72 +1,74 @@
 {
  "teams": {
   "home": {
-   "teamID": "NEW_MEXICO_NCAAF",
+   "teamID": "TEXAS_AM_NCAAF",
+   "statEntityID": "home",
    "names": {
-    "long": "New Mexico",
-    "medium": "New Mexico",
-    "short": "NM"
-   },
-   "statEntityID": "home"
+    "long": "Texas A&M",
+    "medium": "Texas A&M",
+    "short": "TAMU"
+   }
   },
   "away": {
-   "teamID": "AIR_FORCE_NCAAF",
+   "teamID": "TEXAS_NCAAF",
+   "statEntityID": "away",
    "names": {
-    "long": "Air Force",
-    "medium": "Air Force",
-    "short": "AF"
+    "long": "Texas",
+    "medium": "Texas",
+    "short": "TEX"
    },
-   "statEntityID": "away"
+   "colors": {
+    "primary": "#FFFFFF",
+    "secondary": "#CC5400",
+    "primaryContrast": "#CC5400",
+    "secondaryContrast": "#000000"
+   }
   }
  },
  "status": {
+  "startsAt": "2026-11-28T00:30:00.000Z",
+  "previousStartsAt": [],
   "started": false,
-  "completed": false,
-  "cancelled": false,
-  "ended": false,
-  "live": false,
   "delayed": false,
+  "completed": false,
+  "finalized": false,
+  "ended": false,
+  "cancelled": false,
+  "live": false,
+  "hardStart": true,
+  "oddsPresent": true,
+  "oddsAvailable": true,
+  "displayLong": "Upcoming",
+  "displayShort": "",
   "currentPeriodID": "",
   "previousPeriodID": "",
-  "displayShort": "",
-  "displayLong": "Upcoming",
   "inBreak": false,
-  "startsAt": "2026-11-27T21:30:00.000Z",
-  "previousStartsAt": [
-   "2026-11-27T20:30:00.000Z",
-   "2026-11-28T20:30:00.000Z",
-   "2026-11-28T21:30:00.000Z"
-  ],
-  "hardStart": true,
   "periods": {
    "started": [],
    "ended": []
-  },
-  "oddsPresent": true,
-  "oddsAvailable": true,
-  "finalized": false
+  }
  },
  "players_first3": {
-  "ADAM_HRYNCIW_1_NCAAF": {
-   "playerID": "ADAM_HRYNCIW_1_NCAAF",
-   "name": "Adam Hrynciw",
-   "firstName": "Adam",
-   "lastName": "Hrynciw",
-   "teamID": "AIR_FORCE_NCAAF"
+  "AARON_GREGORY_1_NCAAF": {
+   "playerID": "AARON_GREGORY_1_NCAAF",
+   "name": "Aaron Gregory",
+   "firstName": "Aaron",
+   "lastName": "Gregory",
+   "teamID": "TEXAS_AM_NCAAF"
   },
-  "BAILEN_GEORGE_1_NCAAF": {
-   "playerID": "BAILEN_GEORGE_1_NCAAF",
-   "name": "Bailen George",
-   "firstName": "Bailen",
-   "lastName": "George",
-   "teamID": "NEW_MEXICO_NCAAF"
+  "ARCH_MANNING_1_NCAAF": {
+   "playerID": "ARCH_MANNING_1_NCAAF",
+   "name": "Archibald Manning",
+   "firstName": "Archibald",
+   "lastName": "Manning",
+   "teamID": "TEXAS_NCAAF"
   },
-  "CADE_KEITH_1_NCAAF": {
-   "playerID": "CADE_KEITH_1_NCAAF",
-   "name": "Cade Keith",
-   "firstName": "Cade",
-   "lastName": "Keith",
-   "teamID": "NEW_MEXICO_NCAAF"
+  "BRADY_HART_1_NCAAF": {
+   "playerID": "BRADY_HART_1_NCAAF",
+   "name": "Brady Hart",
+   "firstName": "Brady",
+   "lastName": "Hart",
+   "teamID": "TEXAS_AM_NCAAF"
   }
  }
 }
