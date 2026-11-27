@@ -192,3 +192,14 @@ on a phone.
 punctuation or Jr/III) when his props are posted, on any of the three versions. If none are posted
 the page opens as usual with a note saying so; the note goes when the reader picks something. The
 value boards' player cards link this way, since they do not have the feed's player id.
+
+## Sweet-spot report (Nov 27, 2026)
+
+`scripts/report.py` prints, as Markdown, every upcoming play in the 9-book log that fits one
+Results selection, judged on the play when first flagged: edge 3-5%, price -100 to -499, any
+sport, book, side and number of books (Ryan's pick; +9.5% +/- 6.8% on 74 graded plays that day,
+negative on Wide and Pinnacle, so a candidate being watched, not a tested edge). Read-only.
+Ryan's hourly Claude scheduled task "Prop Ladder sweet-spot report" clones the repo, runs it and
+sends the output to his phone; it must never commit, push or change anything. If the selection
+changes, change the constants at the top of the script and the task's wording together. The task
+runs on its own clock, not the refresh's, so a report can land just before a rebuild.
