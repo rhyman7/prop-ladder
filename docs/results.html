@@ -155,7 +155,7 @@
   const BOOKS = ['dk', 'fd', 'ka'], RES = ['loss', 'win', 'push', 'void'];
   const recent = P ? P.rows.map((x) => ({ b: x, sport: P.dims[2].labels[x[2]], player: P.players[x[12]], team: P.teams[x[13]], statLabel: P.stats[x[14]], line: x[15],
     side: x[4] === 0 ? 'o' : 'u', book: BOOKS[x[3]], first_odds: x[6], first_true: x[7] / 1e4, first_edge: x[16] / 1e4, first_books: x[17], last_odds: x[18],
-    result: RES[x[9]], actual: x[19], profit: x[9] === 1 ? (x[6] > 0 ? x[6] / 10 : Math.round(100000 / -x[6]) / 100) : x[9] === 0 ? -10 : 0, start: P.starts[x[20]] })) : (R.recent || []);
+    result: RES[x[9]], actual: x[19], profit: x[9] === 1 ? PL.cents(x[6]) / 100 : x[9] === 0 ? -10 : 0, start: P.starts[x[20]] })) : (R.recent || []);
   const allPlays = recent.map((r) => ({ r, k: { day: r.start, player: r.player, bet: r.statLabel + ' ' + r.side + String(r.line).padStart(6, '0'),
     book: r.book, price: PL.payout(r.first_odds), p: r.first_true, edge: r.first_edge, n: r.first_books,
     last: r.last_odds != null ? PL.payout(r.last_odds) : null, result: r.result, actual: r.actual, profit: r.result === 'void' ? null : r.profit } }));

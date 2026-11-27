@@ -102,5 +102,5 @@ const PL = (() => {
   const payout = (a) => a > 0 ? 1 + a / 100 : 1 + 100 / -a;   // decimal odds, for sorting prices
   const SPORTS = ['NFL', 'CFB', 'NBA', 'NCAAB'];
   const BOOSTS = [0, 25, 30, 50, 100];
-  return { sumPlays, sortRows, sortHeaders, payout, fmtOdds, pct, signedPct, money, fair, price, rungLabel, sideProbs, when, stamp, load, esc, SPORTS, BOOSTS };
+  return { sumPlays, cents, sortRows, sortHeaders, payout, fmtOdds, pct, signedPct, money, fair, price, rungLabel, sideProbs, when, stamp, load, esc, SPORTS, BOOSTS };
 })();
