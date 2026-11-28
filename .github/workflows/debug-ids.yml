@@ -1,0 +1,27 @@
+name: Debug odd IDs
+# By hand only. Lists odd IDs matching a pattern for 2 upcoming events (~2 objects).
+on:
+  workflow_dispatch:
+    inputs:
+      league: {default: "NFL"}
+      pattern: {default: "touchdown"}
+permissions:
+  contents: write
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - env:
+          SGO_API_KEY: ${{ secrets.SGO_API_KEY }}
+          LEAGUE: ${{ inputs.league }}
+          PATTERN: ${{ inputs.pattern }}
+          SGO_SLEEP: "2"
+        run: python scripts/debug_ids.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add coverage/debug_ids.json && git commit -m "Debug odd IDs" || true
+          git pull --rebase -q && git push
