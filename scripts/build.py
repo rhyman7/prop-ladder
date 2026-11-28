@@ -320,20 +320,47 @@ ONE_SIDED_STATS = {"touchdowns"}
 
 
 def pool_vig(raw_pairs):
-    """raw_pairs: [(o, u)] for ONE_SIDED_STATS. Fills POOLED_K."""
-    per = {}
+    """raw_pairs: [(o, u)] for ONE_SIDED_STATS. Fills POOLED_K[stat][book].
+
+    Each book's vig is calibrated against the exchanges: for every prop where an
+    exchange (Kalshi, Novig, Polymarket...) quotes both sides at a line, its
+    vig-free probability p is the reference; a book's Yes price there, implied
+    q, gives k = ln(p) / ln(q) (power method: p = q**k). The book's POOLED_K is
+    the median over 8+ such props; with fewer, its own two-sided quotes if any;
+    otherwise the median of the calibrated books, or 1.25 when nothing is known.
+    (Nov 28, 2026: exchange-only two-sided quotes made soft books look nearly
+    vig-free and produced fake 10%+ anytime-TD edges.)"""
+    cal, own = {}, {}
     for o, u in raw_pairs:
         stat = o.get("statID")
         oq = {b: quotes(q) for b, q in (o.get("byBookmaker") or {}).items()}
         uq = {b: quotes(q) for b, q in (u.get("byBookmaker") or {}).items()}
-        for b in oq:
-            for ln in oq[b]:
+        ref = {}
+        for b in EXCHANGES & set(oq):
+            for ln, oo in oq[b].items():
                 if ln in uq.get(b, {}):
-                    po, pu = imp(oq[b][ln]), imp(uq[b][ln])
+                    po, pu = imp(oo), imp(uq[b][ln])
+                    if 0.98 <= po + pu <= 1.15:
+                        ref.setdefault(ln, []).append(po / (po + pu))
+        for b in oq:
+            if b in EXCHANGES:
+                continue
+            for ln, oo in oq[b].items():
+                if ln in uq.get(b, {}):
+                    po, pu = imp(oo), imp(uq[b][ln])
                     if 1.0 < po + pu < 1.4:
-                        per.setdefault(stat, {}).setdefault(b, []).append(power_k(po, pu))
-    for stat, d in per.items():
-        POOLED_K[stat] = {b: st.median(v) for b, v in d.items()}
+                        own.setdefault(stat, {}).setdefault(b, []).append(power_k(po, pu))
+                if ln in ref:
+                    p, q = st.median(ref[ln]), imp(oo)
+                    if 0.02 < p < 0.98 and 0.02 < q < 0.98:
+                        cal.setdefault(stat, {}).setdefault(b, []).append(math.log(p) / math.log(q))
+    for stat in set(cal) | set(own):
+        ks = {b: st.median(v) for b, v in cal.get(stat, {}).items() if len(v) >= 8}
+        for b, v in own.get(stat, {}).items():
+            ks.setdefault(b, st.median(v))
+        if ks:
+            ks["_default"] = st.median(ks.values())
+        POOLED_K[stat] = ks
 
 
 def build_prop(o, u, books=None, sharp=None):
@@ -353,8 +380,8 @@ def build_prop(o, u, books=None, sharp=None):
         return None
     a = anchor(o, oq_all, uq_all)
     pooled = None
-    if not a and o.get("statID") in ONE_SIDED_STATS and POOLED_K.get(o.get("statID")):
-        pooled = POOLED_K[o["statID"]]
+    if not a and o.get("statID") in ONE_SIDED_STATS:
+        pooled = POOLED_K.get(o["statID"]) or {"_default": 1.25}
     elif not a:
         return None
     if a:
@@ -377,7 +404,7 @@ def build_prop(o, u, books=None, sharp=None):
                 ks[b] = power_k(po, pu)
     if pooled:
         # one-sided prop: each book's pooled vig for this stat (median of the others if unknown)
-        kd = st.median(pooled.values())
+        kd = pooled.get("_default", 1.25)
         ks = {b: pooled.get(b, kd) for b in set(oq_all) | set(uq_all)}
     if not ks:
         return None

@@ -38,6 +38,7 @@ SERIES = {  # Kalshi series -> (our sport, SGO statID)
     "KXNFLRSHATT": ("NFL", "rushing_attempts"), "KXNFLPASSINT": ("NFL", "passing_interceptions"),
     "KXNFLRRYDS": ("NFL", "rushing+receiving_yards"), "KXNFLLONGREC": ("NFL", "receiving_longestReception"),
     "KXNFLLONGRSH": ("NFL", "rushing_longestRush"), "KXNFLANYTD": ("NFL", "touchdowns"),
+    "KXNFLTD": ("NFL", "touchdowns"), "KXNFL2TD": ("NFL", "touchdowns"),
     "KXNBAPTS": ("NBA", "points"), "KXNBAREB": ("NBA", "rebounds"), "KXNBAAST": ("NBA", "assists"),
     "KXNBA3PT": ("NBA", "threePointersMade"), "KXNBAPRA": ("NBA", "points+rebounds+assists"),
     "KXNBAPR": ("NBA", "points+rebounds"), "KXNBAPA": ("NBA", "points+assists"),
