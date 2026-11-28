@@ -1,74 +1,88 @@
 {
  "teams": {
   "home": {
-   "teamID": "TEXAS_AM_NCAAF",
-   "statEntityID": "home",
+   "teamID": "HOUSTON_TEXANS_NFL",
    "names": {
-    "long": "Texas A&M",
-    "medium": "Texas A&M",
-    "short": "TAMU"
-   }
-  },
-  "away": {
-   "teamID": "TEXAS_NCAAF",
-   "statEntityID": "away",
-   "names": {
-    "long": "Texas",
-    "medium": "Texas",
-    "short": "TEX"
+    "long": "Houston Texans",
+    "medium": "Texans",
+    "short": "HOU",
+    "location": "Houston"
    },
    "colors": {
-    "primary": "#FFFFFF",
-    "secondary": "#CC5400",
-    "primaryContrast": "#CC5400",
-    "secondaryContrast": "#000000"
-   }
+    "primary": "#01123E",
+    "secondary": "#B01C36",
+    "primaryContrast": "#FFFFFF",
+    "secondaryContrast": "#FFFFFF"
+   },
+   "statEntityID": "home"
+  },
+  "away": {
+   "teamID": "BALTIMORE_RAVENS_NFL",
+   "names": {
+    "long": "Baltimore Ravens",
+    "medium": "Ravens",
+    "short": "BAL",
+    "location": "Baltimore"
+   },
+   "colors": {
+    "primary": "#340E57",
+    "secondary": "#FFFFFF",
+    "primaryContrast": "#FFFFFF",
+    "secondaryContrast": "#340E57"
+   },
+   "statEntityID": "away"
   }
  },
  "status": {
-  "startsAt": "2026-11-28T00:30:00.000Z",
-  "previousStartsAt": [],
   "started": false,
-  "delayed": false,
   "completed": false,
-  "finalized": false,
-  "ended": false,
   "cancelled": false,
+  "ended": false,
   "live": false,
-  "hardStart": true,
-  "oddsPresent": true,
-  "oddsAvailable": true,
-  "displayLong": "Upcoming",
-  "displayShort": "",
+  "delayed": false,
   "currentPeriodID": "",
   "previousPeriodID": "",
+  "displayShort": "",
+  "displayLong": "Upcoming",
   "inBreak": false,
+  "startsAt": "2026-11-29T18:00:00.000Z",
+  "previousStartsAt": [],
+  "hardStart": true,
   "periods": {
    "started": [],
    "ended": []
-  }
+  },
+  "oddsPresent": true,
+  "oddsAvailable": true,
+  "finalized": false
  },
  "players_first3": {
-  "AARON_GREGORY_1_NCAAF": {
-   "playerID": "AARON_GREGORY_1_NCAAF",
-   "name": "Aaron Gregory",
-   "firstName": "Aaron",
-   "lastName": "Gregory",
-   "teamID": "TEXAS_AM_NCAAF"
+  "ADAM_RANDALL_1_NFL": {
+   "playerID": "ADAM_RANDALL_1_NFL",
+   "name": "Adam Randall",
+   "firstName": "Adam",
+   "lastName": "Randall",
+   "teamID": "BALTIMORE_RAVENS_NFL"
   },
-  "ARCH_MANNING_1_NCAAF": {
-   "playerID": "ARCH_MANNING_1_NCAAF",
-   "name": "Archibald Manning",
-   "firstName": "Archibald",
-   "lastName": "Manning",
-   "teamID": "TEXAS_NCAAF"
+  "ALI_GAYE_1_NFL": {
+   "playerID": "ALI_GAYE_1_NFL",
+   "name": "Ali Gaye",
+   "firstName": "Ali",
+   "lastName": "Gaye",
+   "nickname": "A.Gaye",
+   "teamID": "HOUSTON_TEXANS_NFL",
+   "status": "ir",
+   "statusDetails": "I.L. - Knee"
   },
-  "BRADY_HART_1_NCAAF": {
-   "playerID": "BRADY_HART_1_NCAAF",
-   "name": "Brady Hart",
-   "firstName": "Brady",
-   "lastName": "Hart",
-   "teamID": "TEXAS_AM_NCAAF"
+  "AZEEZ_ALSHAAIR_1_NFL": {
+   "playerID": "AZEEZ_ALSHAAIR_1_NFL",
+   "name": "Azeez Al-Shaair",
+   "firstName": "Azeez",
+   "lastName": "Al-Shaair",
+   "nickname": "A.Al-Shaair",
+   "teamID": "HOUSTON_TEXANS_NFL",
+   "status": "ir",
+   "statusDetails": "I.L. - Groin"
   }
  }
 }
