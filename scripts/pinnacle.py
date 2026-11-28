@@ -177,7 +177,15 @@ def main():
     os.makedirs(os.path.join(ROOT, "docs", "pinnacle"), exist_ok=True)
     with open(os.path.join(ROOT, "docs", "pinnacle", "data.json"), "w") as f:
         json.dump(out, f, separators=(",", ":"))
+    from collections import Counter
+    qs = Counter((k[0], k[1]) for k in quotes)
+    hs = Counter((p["sport"], p["stat"]) for p in out["props"] if p.get("pin"))
     print(f"pinnacle: fetched {info}; {len(quotes)} Pinnacle props; anchored {hits} of {len(out['props'])} props")
+    print("pinnacle: by stat (quotes -> anchored):", {f"{k[0]} {k[1]}": f"{v}->{hs.get(k, 0)}" for k, v in qs.most_common()})
+    td_q = [k for k in quotes if k[1] == "touchdowns"][:5]
+    td_p = [(p["sport"], p["stat"], norm(p["player"]), datetime.fromisoformat(p["start"].replace("Z", "+00:00")).astimezone(ET).date().isoformat())
+            for p in out["props"] if p["stat"] == "touchdowns" and p["sport"] == "NFL"][:5]
+    print("pinnacle: TD quote keys", td_q, "| our NFL TD keys", td_p, "| example lines", [quotes[k][0] for k in td_q])
 
 
 if __name__ == "__main__":
