@@ -110,6 +110,15 @@ logged history to test on (nothing logged yet).
   doesn't play resolves NO (Over loses, Under wins); track.py grades `ka` plays
   that way, while DK/FD bets on a DNP are void.
 
+## Anytime TD (added Nov 28, 2026)
+
+- Books list anytime TD as a Yes/No bet (`touchdowns-<player>-game-yn-yes/no`).
+  `build.merge_yes_no()` folds those prices into the player's touchdowns
+  Over/Under at 0.5 (creating it if needed), so the Touchdowns ladder reads
+  1+ (= anytime TD), 2+, 3+. Kalshi (KXNFLANYTD) and Pinnacle ("Total
+  Touchdowns") already map to the same stat. Grading falls back to the Yes/No
+  odd's `score` when there is no Over/Under one.
+
 ## Results tracking
 
 - `scripts/track.py` runs after `build.py` in the refresh. It logs every rung +

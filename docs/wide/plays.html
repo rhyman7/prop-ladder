@@ -161,7 +161,9 @@
     $('rows').innerHTML = sorted.slice(0, MAX_ROWS).map((x) => {
       const g = games.get(x.p.game);
       const link = 'index.html#' + new URLSearchParams({ sport: x.p.sport, team: x.p.teamName || '', pid: x.p.pid, stat: x.p.stat, side: x.side, boost: S.boost }).toString();
-      const bet = (x.side === 'o' ? 'Over ' : 'Under ') + x.r.l + ' ' + x.p.statLabel.toLowerCase() + ' (' + PL.rungLabel(x.r.l, x.side) + ')';
+      const bet = x.p.stat === 'touchdowns' && x.r.l === 0.5 ? 'Anytime TD: ' + (x.side === 'o' ? 'Yes' : 'No')
+        : x.p.stat === 'touchdowns' ? (x.side === 'o' ? PL.rungLabel(x.r.l, 'o') + ' TDs' : 'Under ' + x.r.l + ' TDs')
+        : (x.side === 'o' ? 'Over ' : 'Under ') + x.r.l + ' ' + x.p.statLabel.toLowerCase() + ' (' + PL.rungLabel(x.r.l, x.side) + ')';
       return `<tr><td><span class="chip">${PL.signedPct(x.edge)}</span></td>
         <td class="l wr"><a class="b" style="color:var(--ink)" href="${link}">${PL.esc(x.p.player)}</a> <span class="m">${PL.esc(x.p.team || '')}</span></td>
         <td class="l wr">${PL.esc(bet)}</td><td class="l">${({ dk: 'DraftKings', fd: 'FanDuel', ka: 'Kalshi' })[x.bk]}${x.bk === 'ka' ? `<span class="sub2">${x.side === 'o' ? 'Yes' : 'No'} ${x.r['kp' + x.side]}¢ + fee</span>` : ''}</td>

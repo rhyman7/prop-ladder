@@ -137,7 +137,10 @@ def final_score(ev, pid, stat):
         return "void", None
     if not (stt.get("finalized") or stt.get("ended") or stt.get("completed")):
         return "wait", None
-    o = (ev.get("odds") or {}).get(f"{stat}-{pid}-game-ou-over") or {}
+    odds = ev.get("odds") or {}
+    o = odds.get(f"{stat}-{pid}-game-ou-over") or {}
+    if o.get("score") is None and stat == "touchdowns":
+        o = odds.get(f"touchdowns-{pid}-game-yn-yes") or o   # anytime TD only listed as Yes/No
     if o.get("score") is None:
         return ("dnp", None) if stt.get("finalized") else ("wait", None)
     return "final", float(o["score"])

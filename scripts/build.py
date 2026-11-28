@@ -88,7 +88,7 @@ STAT_LABEL = {
     "receiving_receptions": "Receptions", "rushing_attempts": "Rushing attempts",
     "passing_attempts": "Pass attempts", "passing_completions": "Completions",
     "passing_touchdowns": "Passing TDs", "passing_interceptions": "Interceptions thrown",
-    "touchdowns": "Touchdowns", "defense_sacks": "Sacks", "defense_combinedTackles": "Tackles + assists",
+    "touchdowns": "Touchdowns (anytime TD)", "defense_sacks": "Sacks", "defense_combinedTackles": "Tackles + assists",
     "defense_soloTackles": "Solo tackles", "fieldGoals_made": "Field goals made",
     "receiving_longestReception": "Longest reception", "rushing_longestRush": "Longest rush",
     "passing_longestCompletion": "Longest completion", "defense_interceptions": "Interceptions (defense)",
@@ -210,6 +210,35 @@ def monotone(q, side):
         keep[ln] = q[ln]
         last = p
     return keep
+
+
+def merge_yes_no(odds):
+    """Anytime TD: books price it as a Yes/No bet ("touchdowns-<player>-game-yn-
+    yes/no"); fold those prices into the Over/Under 0.5 of the same player's
+    touchdowns ladder (creating it if missing), so anytime TD = the "1+" rung
+    next to 2+ and 3+ TDs."""
+    for oid, y in list(odds.items()):
+        if y.get("statID") != "touchdowns" or y.get("betTypeID") != "yn" or y.get("sideID") != "yes" \
+                or y.get("periodID") != "game" or not y.get("playerID"):
+            continue
+        n = odds.get(y.get("opposingOddID") or "") or {}
+        base = f'touchdowns-{y["playerID"]}-game-ou-'
+        for side, src in (("over", y), ("under", n)):
+            tgt = odds.setdefault(base + side, {
+                "oddID": base + side, "opposingOddID": base + ("under" if side == "over" else "over"),
+                "statID": "touchdowns", "statEntityID": y.get("statEntityID"), "playerID": y["playerID"],
+                "periodID": "game", "betTypeID": "ou", "sideID": side, "byBookmaker": {}})
+            bb = tgt.setdefault("byBookmaker", {})
+            for bk, q in (src.get("byBookmaker") or {}).items():
+                if not q.get("odds"):
+                    continue
+                entry = {"odds": q["odds"], "overUnder": "0.5", "available": q.get("available", True)}
+                cur = bb.get(bk)
+                if cur is None:
+                    bb[bk] = entry
+                elif float(cur.get("overUnder") or -1) != 0.5 and not any(
+                        float(a.get("overUnder") or -1) == 0.5 for a in cur.get("altLines") or []):
+                    cur.setdefault("altLines", []).append(entry)
 
 
 def team_info(t):
@@ -383,6 +412,7 @@ def main():
                 meta_sample = {"teams": teams, "status": ev.get("status"),
                                "players_first3": dict(list(players.items())[:3])}
             odds = ev.get("odds") or {}
+            merge_yes_no(odds)
             for oid, o in odds.items():
                 if o.get("betTypeID") != "ou" or o.get("sideID") != "over" or o.get("periodID") != "game":
                     continue
