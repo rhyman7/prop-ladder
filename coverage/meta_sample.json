@@ -1,20 +1,20 @@
 {
  "teams": {
   "home": {
-   "teamID": "UTAH_NCAAF",
+   "teamID": "SYRACUSE_NCAAF",
    "names": {
-    "long": "Utah",
-    "medium": "Utah",
-    "short": "UTAH"
+    "long": "Syracuse",
+    "medium": "Syracuse",
+    "short": "SYR"
    },
    "statEntityID": "home"
   },
   "away": {
-   "teamID": "WEST_VIRGINIA_NCAAF",
+   "teamID": "NOTRE_DAME_NCAAF",
    "names": {
-    "long": "West Virginia",
-    "medium": "West Virginia",
-    "short": "WVU"
+    "long": "Notre Dame",
+    "medium": "Notre Dame",
+    "short": "ND"
    },
    "statEntityID": "away"
   }
@@ -31,9 +31,11 @@
   "displayShort": "",
   "displayLong": "Upcoming",
   "inBreak": false,
-  "startsAt": "2026-11-28T02:00:00.000Z",
+  "startsAt": "2026-11-28T17:00:00.000Z",
   "previousStartsAt": [
-   "2026-11-28T01:00:00.000Z"
+   "2026-11-28T00:00:00.000Z",
+   "2026-11-28T04:00:00.000Z",
+   "2026-11-28T16:00:00.000Z"
   ],
   "hardStart": true,
   "periods": {
@@ -45,26 +47,26 @@
   "finalized": false
  },
  "players_first3": {
-  "DEVON_DAMPIER_1_NCAAF": {
-   "playerID": "DEVON_DAMPIER_1_NCAAF",
-   "name": "Devon Dampier",
-   "firstName": "Devon",
-   "lastName": "Dampier",
-   "teamID": "UTAH_NCAAF"
+  "ANEYAS_WILLIAMS_1_NCAAF": {
+   "playerID": "ANEYAS_WILLIAMS_1_NCAAF",
+   "name": "Aneyas Williams",
+   "firstName": "Aneyas",
+   "lastName": "Williams",
+   "teamID": "NOTRE_DAME_NCAAF"
   },
-  "CAMERON_COOK_1_NCAAF": {
-   "playerID": "CAMERON_COOK_1_NCAAF",
-   "name": "Cameron Cook",
-   "firstName": "Cameron",
-   "lastName": "Cook",
-   "teamID": "WEST_VIRGINIA_NCAAF"
+  "CJ_CARR_1_NCAAF": {
+   "playerID": "CJ_CARR_1_NCAAF",
+   "name": "CJ Carr",
+   "firstName": "CJ",
+   "lastName": "Carr",
+   "teamID": "NOTRE_DAME_NCAAF"
   },
-  "DJ_EPPS_1_NCAAF": {
-   "playerID": "DJ_EPPS_1_NCAAF",
-   "name": "DJ Epps",
-   "firstName": "DJ",
-   "lastName": "Epps",
-   "teamID": "WEST_VIRGINIA_NCAAF"
+  "JONAZ_WALTON_1_NCAAF": {
+   "playerID": "JONAZ_WALTON_1_NCAAF",
+   "name": "Jonaz Walton",
+   "firstName": "Jonaz",
+   "lastName": "Walton",
+   "teamID": "NOTRE_DAME_NCAAF"
   }
  }
 }
