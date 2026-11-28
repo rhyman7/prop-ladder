@@ -166,7 +166,7 @@
     const vs = game ? (game.away.name + ' at ' + game.home.name) : '';
     $('facts').innerHTML = `
       <div class="card fact"><span class="lbl">${prop.pin ? 'Pinnacle anchor' : 'Anchor'}</span><span class="big">Over ${a.l} · ${PL.pct(a.p)}</span>
-        <span class="small">Fair ${PL.fmtOdds(a.fair)} · ${prop.pin ? "Pinnacle's line, vig removed" + (prop.pin.risk ? ' · Pinnacle limit $' + Number(prop.pin.risk).toLocaleString() : '') : a.n >= 2 ? 'median of ' + a.n + ' books quoting both sides, vig removed' : 'only 1 book quotes both sides: weak anchor'}</span></div>
+        <span class="small">Fair ${PL.fmtOdds(a.fair)} · ${a.pooled && !prop.pin ? 'Yes-only prices from ' + a.n + ' books; each book\'s usual anytime-TD vig removed' : prop.pin ? "Pinnacle's line, vig removed" + (prop.pin.risk ? ' · Pinnacle limit $' + Number(prop.pin.risk).toLocaleString() : '') : a.n >= 2 ? 'median of ' + a.n + ' books quoting both sides, vig removed' : 'only 1 book quotes both sides: weak anchor'}</span></div>
       <div class="card fact"><span class="lbl">Source</span><span><span class="tag dark">${isPin ? (prop.pin ? 'Pinnacle' : 'No Pinnacle line · 9-book') : data.source === 'wide' ? 'Wide · sharp first' : 'Consensus'}</span> <span class="tag">${PL.esc(vs)}</span></span>
         <span class="small">${PL.esc(curveTxt)} · ${PL.when(prop.start)} ET</span></div>
       <div class="card fact"><span class="lbl">Best bet on this ladder</span>

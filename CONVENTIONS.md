@@ -118,6 +118,11 @@ logged history to test on (nothing logged yet).
   1+ (= anytime TD), 2+, 3+. Kalshi (KXNFLANYTD) and Pinnacle ("Total
   Touchdowns") already map to the same stat. Grading falls back to the Yes/No
   odd's `score` when there is no Over/Under one.
+- Most books post anytime TD Yes-only, so its vig can't be measured per player.
+  For stats in `ONE_SIDED_STATS`, `pool_vig()` measures each book's median
+  power-k over every two-sided quote of that stat in the pull (`POOLED_K`;
+  books with none get the median of the others) and applies it to that book's
+  one-sided prices; anchor carries `pooled: true`.
 
 ## Results tracking
 

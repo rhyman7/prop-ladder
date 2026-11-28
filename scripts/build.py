@@ -311,6 +311,31 @@ def power_k(po, pu):
     return (lo + hi) / 2
 
 
+# Anytime TD is posted Yes-only by most books, so a book's vig can't be measured
+# on that player's prop. POOLED_K[stat][book] = the book's median power-k over
+# every two-sided quote of that stat in this pull (filled by main()); books with
+# none use the median of the others. Used only when a prop has no two-sided line.
+POOLED_K = {}
+ONE_SIDED_STATS = {"touchdowns"}
+
+
+def pool_vig(raw_pairs):
+    """raw_pairs: [(o, u)] for ONE_SIDED_STATS. Fills POOLED_K."""
+    per = {}
+    for o, u in raw_pairs:
+        stat = o.get("statID")
+        oq = {b: quotes(q) for b, q in (o.get("byBookmaker") or {}).items()}
+        uq = {b: quotes(q) for b, q in (u.get("byBookmaker") or {}).items()}
+        for b in oq:
+            for ln in oq[b]:
+                if ln in uq.get(b, {}):
+                    po, pu = imp(oq[b][ln]), imp(uq[b][ln])
+                    if 1.0 < po + pu < 1.4:
+                        per.setdefault(stat, {}).setdefault(b, []).append(power_k(po, pu))
+    for stat, d in per.items():
+        POOLED_K[stat] = {b: st.median(v) for b, v in d.items()}
+
+
 def build_prop(o, u, books=None, sharp=None):
     """Market ladder: each book's vig, measured on its own two-sided line(s), is
     removed from every rung it posts (power method); a rung's true probability
@@ -327,9 +352,21 @@ def build_prop(o, u, books=None, sharp=None):
     if not any(oq_all.get(b) or uq_all.get(b) for b in BOOKS):
         return None
     a = anchor(o, oq_all, uq_all)
-    if not a:
+    pooled = None
+    if not a and o.get("statID") in ONE_SIDED_STATS and POOLED_K.get(o.get("statID")):
+        pooled = POOLED_K[o["statID"]]
+    elif not a:
         return None
-    aline, ap, an, how = a
+    if a:
+        aline, ap, an, how = a
+    else:   # one-sided: anchor = the line most books post, filled in from the rungs below
+        cnt = {}
+        for b in oq_all:
+            for ln in oq_all[b]:
+                cnt[ln] = cnt.get(ln, 0) + 1
+        if not cnt:
+            return None
+        aline, ap, an, how = max(cnt, key=cnt.get), None, 0, "pooled"
     # each book's vig exponent from its two-sided line nearest 50%
     ks = {}
     for b in set(oq_all) | set(uq_all):
@@ -338,6 +375,10 @@ def build_prop(o, u, books=None, sharp=None):
             ln, po, pu = min(two, key=lambda t: abs(t[1] / (t[1] + t[2]) - 0.5))
             if po + pu > 1:
                 ks[b] = power_k(po, pu)
+    if pooled:
+        # one-sided prop: each book's pooled vig for this stat (median of the others if unknown)
+        kd = st.median(pooled.values())
+        ks = {b: pooled.get(b, kd) for b in set(oq_all) | set(uq_all)}
     if not ks:
         return None
     k_default = st.median(ks.values())
@@ -372,9 +413,14 @@ def build_prop(o, u, books=None, sharp=None):
             rungs.append(r)
     if not rungs:
         return None
+    if ap is None:
+        ar = next((r for r in rungs if r["l"] == aline), None)
+        if not ar:
+            return None
+        ap, an = ar["po"], ar["n"]
     stat = o.get("statID")
     return {"stat": stat, "statLabel": STAT_LABEL.get(stat, stat.replace("_", " ").replace("+", " + ")),
-            "anchor": {"l": aline, "p": round(ap, 4), "fair": american(ap), "n": an},
+            "anchor": {"l": aline, "p": round(ap, 4), "fair": american(ap), "n": an, **({"pooled": True} if how == "pooled" else {})},
             "books": len(ks), "rungs": rungs}
 
 
@@ -424,6 +470,8 @@ def main():
 
     wide = {"pulledAt": out["pulledAt"], "source": "wide", "games": out["games"], "props": [],
             "method": "market-ladder, sharp books first", "books": sorted(WIDE_BOOKS), "sharp": sorted(SHARP_BOOKS)}
+    pool_vig([(o, u) for *_, o, u in raw if o.get("statID") in ONE_SIDED_STATS])
+    print("pooled vig (power k) for one-sided stats:", {k: {b: round(x, 3) for b, x in v.items()} for k, v in POOLED_K.items()})
     for lg, ev, home, away, gid, start, players, o, u in raw:
         pid = o.get("playerID")
         for target, kw in ((out, {}), (wide, {"books": WIDE_BOOKS, "sharp": SHARP_BOOKS})):
