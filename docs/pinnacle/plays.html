@@ -25,7 +25,9 @@
   <section class="card controls" aria-label="Filters">
     <div class="field"><span class="lbl">Sport</span><div class="pills" id="sports"></div></div>
     <div class="field" id="teamField" hidden style="min-width:240px;max-width:520px"><label class="lbl" for="team">Teams</label><select id="team"></select>
-      <div class="pills" id="teamChips"></div><span class="hint" id="teamHint">Add one or more teams</span></div>
+      <div class="pills" id="teamChips"></div><span class="hint" id="teamHint">Optional: add one or more teams</span></div>
+    <div class="field" id="statField" hidden style="min-width:240px;max-width:520px"><label class="lbl" for="stat">Stats</label><select id="stat"></select>
+      <div class="pills" id="statChips"></div><span class="hint" id="statHint">Optional: add one or more stats</span></div>
     <div class="field"><span class="lbl">Book</span><div class="pills" id="books"></div></div>
     <div class="field"><span class="lbl">Minimum edge</span><div class="pills" id="mins"></div></div>
     <div class="field"><span class="lbl">Price</span><div class="pills" id="prices"></div><span class="hint">Pick one or more ranges</span></div>
@@ -65,7 +67,7 @@
   let data;
   try { data = await PL.load(); } catch (e) { $('stamp').textContent = 'Could not load prices'; $('msg').innerHTML = '<p class="warn">No price data yet. Run the Refresh prices Action in the repo.</p>'; return; }
   $('stamp').textContent = PL.stamp(data.pulledAt) + ({ wide: ' · wide (sharp first)', pinnacle: ' · Pinnacle' }[data.source] || ' · consensus');
-  const S = { sport: 'All', book: 'Both', min: 0, basis: data.source === 'pinnacle' ? 'p' : 2, boost: 0, prices: new Set(), teams: new Set(), sort: { key: 'edge', dir: 'desc' } };
+  const S = { sport: 'All', book: 'Both', min: 0, basis: data.source === 'pinnacle' ? 'p' : 2, boost: 0, prices: new Set(), teams: new Set(), stats: new Set(), sort: { key: 'edge', dir: 'desc' } };
   // Price ranges (American odds). Several can be on at once; none = all prices.
   const PRICES = [
     ['m700', '−700 or less', (a) => a <= -700],
@@ -102,31 +104,43 @@
   }
 
   $('team').onchange = (e) => { if (e.target.value) S.teams.add(e.target.value); render(); };
+  $('stat').onchange = (e) => { if (e.target.value) S.stats.add(e.target.value); render(); };
+  // dropdown + removable chips for a multi-select set
+  function chipPicker(sel, chipsEl, hintEl, set, items, noun) {
+    const have = new Set(items.map(([v]) => v));
+    for (const v of [...set]) if (!have.has(v)) set.delete(v);
+    const label = new Map(items);
+    sel.innerHTML = `<option value="">${set.size ? 'Add another ' + noun + '…' : 'All ' + noun + 's (add a ' + noun + '…)'}</option>` +
+      items.filter(([v]) => !set.has(v)).map(([v, l]) => `<option value="${PL.esc(v)}">${PL.esc(l)}</option>`).join('');
+    chipsEl.innerHTML = '';
+    for (const v of [...set].sort((a, b) => String(label.get(a)).localeCompare(String(label.get(b))))) {
+      const b = document.createElement('button');
+      b.className = 'pill'; b.type = 'button'; b.setAttribute('aria-pressed', 'true');
+      b.setAttribute('aria-label', 'Remove ' + label.get(v)); b.textContent = label.get(v) + '  ×';
+      b.onclick = () => { set.delete(v); render(); };
+      chipsEl.appendChild(b);
+    }
+    if (set.size > 1) {
+      const c = document.createElement('button');
+      c.className = 'pill'; c.type = 'button'; c.textContent = 'Clear all';
+      c.onclick = () => { set.clear(); render(); };
+      chipsEl.appendChild(c);
+    }
+    hintEl.hidden = set.size > 0;
+  }
   let lastSport = null;
   function render() {
-    if (S.sport !== lastSport) { S.teams.clear(); lastSport = S.sport; }
+    if (S.sport !== lastSport) { S.teams.clear(); S.stats.clear(); lastSport = S.sport; }
     pills($('sports'), 'sport', [['All', 'All'], ...PL.SPORTS.map((s) => [s, s])]);
-    $('teamField').hidden = S.sport === 'All';
+    $('teamField').hidden = $('statField').hidden = S.sport === 'All';
     if (S.sport !== 'All') {
-      const teams = [...new Set(data.props.filter((p) => p.sport === S.sport).map((p) => p.teamName).filter(Boolean))].sort();
-      for (const t of [...S.teams]) if (!teams.includes(t)) S.teams.delete(t);
-      const left = teams.filter((t) => !S.teams.has(t));
-      $('team').innerHTML = `<option value="">${S.teams.size ? 'Add another team…' : 'All teams (add a team…)'}</option>` + left.map((t) => `<option value="${PL.esc(t)}">${PL.esc(t)}</option>`).join('');
-      const chips = $('teamChips'); chips.innerHTML = '';
-      for (const t of [...S.teams].sort()) {
-        const b = document.createElement('button');
-        b.className = 'pill'; b.type = 'button'; b.setAttribute('aria-pressed', 'true');
-        b.setAttribute('aria-label', 'Remove ' + t); b.textContent = t + '  ×';
-        b.onclick = () => { S.teams.delete(t); render(); };
-        chips.appendChild(b);
-      }
-      if (S.teams.size > 1) {
-        const c = document.createElement('button');
-        c.className = 'pill'; c.type = 'button'; c.textContent = 'Clear all';
-        c.onclick = () => { S.teams.clear(); render(); };
-        chips.appendChild(c);
-      }
-      $('teamHint').hidden = S.teams.size > 0;
+      const inSport = data.props.filter((p) => p.sport === S.sport);
+      const teams = [...new Set(inSport.map((p) => p.teamName).filter(Boolean))].sort();
+      chipPicker($('team'), $('teamChips'), $('teamHint'), S.teams, teams.map((t) => [t, t]), 'team');
+      // stats offered for this sport (and the chosen teams, if any)
+      const pool = S.teams.size ? inSport.filter((p) => S.teams.has(p.teamName)) : inSport;
+      const stats = [...new Map(pool.map((p) => [p.stat, p.statLabel])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+      chipPicker($('stat'), $('statChips'), $('statHint'), S.stats, stats, 'stat');
     }
     pills($('books'), 'book', [['Both', 'All'], ['dk', 'DK'], ['fd', 'FD'], ['ka', 'Kalshi']]);
     pills($('mins'), 'min', [[0, 'Any'], [1, '1%+'], [2, '2%+'], [3, '3%+']]);
@@ -137,6 +151,7 @@
     for (const p of data.props) {
       if (S.sport !== 'All' && p.sport !== S.sport) continue;
       if (S.teams.size && !S.teams.has(p.teamName)) continue;
+      if (S.stats.size && !S.stats.has(p.stat)) continue;
       for (const r of p.rungs) {
         if (S.basis === 's' ? !r.sf : S.basis === 'p' ? !p.pin : r.n < S.basis) continue;
         for (const side of ['o', 'u']) {
